@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BITSHIELD</title>
+    <style>
+      :root {
+        --workspace: #eef9f3;
+        --panel: #f7fbf9;
+        --card: #ffffff;
+        --ink: #163a34;
+        --muted: #536f69;
+        --line: #dfeee7;
+        --primary: #1d6b5f;
+        --primary-soft: rgba(29, 107, 95, 0.08);
+        --critical: #d85d4d;
+        --high: #e39a58;
+        --medium: #c7a156;
+        --low: #4aa381;
+        --success: #2d8d74;
+        --focus: #5da9a1;
+        --shadow: rgba(21, 52, 45, 0.08);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --workspace: #eaf7f3;
+          --panel: #f4faf7;
+          --card: #ffffff;
+          --ink: #143c35;
+          --muted: #57766f;
+          --line: #d9ece5;
+          --primary: #1d6b5f;
+          --primary-soft: rgba(29, 107, 95, 0.08);
+          --critical: #d85d4d;
+          --high: #e39a58;
+          --medium: #c7a156;
+          --low: #4aa381;
+          --success: #2d8d74;
+          --focus: #5da9a1;
+          --shadow: rgba(21, 52, 45, 0.08);
+        }
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Roboto, Arial, sans-serif;
+        background: var(--workspace);
+        color: var(--ink);
+        line-height: 1.5;
+      }
+      button, textarea, input, select { font: inherit; }
+      a { color: inherit; text-decoration: none; }
+      :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(242, 249, 246, 0.92);
+        border-bottom: 1px solid var(--line);
+        backdrop-filter: blur(12px);
+      }
+      @media (prefers-color-scheme: dark) {
+        .topbar { background: rgba(14, 23, 38, 0.9); }
+      }
+      .topbar-inner {
+        max-width: 1360px;
+        margin: 0 auto;
+        padding: 0.85rem 1.1rem;
+        display: grid;
+        grid-template-columns: 1.2fr 0.85fr 1.1fr 0.85fr;
+        align-items: center;
+        gap: 0.8rem;
+      }
+      .brand { display: flex; align-items: center; gap: 0.75rem; }
+      .brand-mark {
+        width: 42px; height: 42px; border-radius: 12px; border: 1px solid var(--line);
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(45, 125, 93, 0.12));
+        display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+        color: var(--primary);
+      }
+      .brand-mark svg {
+        width: 26px; height: 26px; display: block;
+      }
+      .brand h1 { margin: 0; font-size: 1.12rem; letter-spacing: 0.1em; text-transform: uppercase; }
+      .brand small { display: block; color: var(--muted); font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; }
+      .status-pill {
+        display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+        border: 1px solid var(--line); background: var(--card); border-radius: 999px;
+        padding: 0.48rem 0.8rem; color: var(--muted); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase;
+      }
+      .status-pill.offline { border-color: rgba(179, 38, 30, 0.3); color: var(--critical); }
+      .status-pill.online { border-color: rgba(45, 125, 93, 0.28); color: var(--success); }
+      .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--low); display: inline-block; }
+      .status-pill.offline .status-dot { background: var(--critical); }
+      .status-pill.online .status-dot { background: var(--success); }
+      .meta-note {
+        text-align: right; color: var(--muted); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase;
+      }
+
+      .page { max-width: 1360px; margin: 0 auto; padding: 1rem 1rem 3rem; }
+      .hero {
+        display: grid; grid-template-columns: 1.6fr 1fr; gap: 1rem; margin-bottom: 1rem;
+      }
+      .hero-copy, .hero-stats, .panel {
+        background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 10px 22px var(--shadow);
+      }
+      .hero-copy { padding: 1.3rem 1.4rem; }
+      .dashboard-grid {
+        display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.8rem; margin: 1rem 0 1.1rem;
+      }
+      .dashboard-card {
+        position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 18px; padding: 1rem 0.9rem; background: linear-gradient(135deg, rgba(168, 214, 202, 0.55), rgba(255,255,255,0.92));
+        cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+      }
+      .dashboard-card:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08); }
+      .dashboard-card:nth-child(2) { background: linear-gradient(135deg, rgba(198, 229, 216, 0.65), rgba(255,255,255,0.9)); }
+      .dashboard-card:nth-child(3) { background: linear-gradient(135deg, rgba(222, 231, 255, 0.72), rgba(255,255,255,0.9)); }
+      .dashboard-card:nth-child(4) { background: linear-gradient(135deg, rgba(203, 232, 223, 0.7), rgba(255,255,255,0.9)); }
+      .dashboard-icon {
+        width: 42px; height: 42px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem;
+        background: rgba(255,255,255,0.72); border: 1px solid rgba(148,163,184,0.38); margin-bottom: 0.7rem;
+        box-shadow: 0 6px 15px rgba(29, 107, 95, 0.08);
+      }
+      .dashboard-card strong { display: block; font-size: 0.82rem; letter-spacing: 0.12em; text-transform: uppercase; }
+      .dashboard-card span { display: block; margin-top: 0.4rem; color: var(--muted); font-size: 0.72rem; }
+      .eyebrow {
+        display: inline-block; margin-bottom: 0.6rem; color: var(--muted); font-size: 0.72rem;
+        letter-spacing: 0.15em; text-transform: uppercase;
+      }
+      .hero-copy h2 {
+        margin: 0 0 0.7rem; font-size: clamp(2.2rem, 4vw, 4.5rem); line-height: 0.96; letter-spacing: -0.08em;
+      }
+      .hero-copy p { margin: 0; color: var(--muted); max-width: 58ch; font-size: 1.02rem; }
+      .hero-cta { margin-top: 1rem; display: flex; gap: 0.7rem; flex-wrap: wrap; }
+      .primary-btn, .secondary-btn, .ghost-btn, .small-btn, .filter-btn {
+        border: 1px solid var(--line); background: var(--card); color: var(--ink);
+        border-radius: 12px; min-height: 44px; padding: 0.7rem 1rem; cursor: pointer;
+        font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; transition: transform 0.12s ease;
+      }
+      .primary-btn {
+        background: var(--primary); border-color: var(--primary); color: var(--card);
+      }
+      .secondary-btn { background: var(--panel); }
+      .small-btn { min-height: 36px; padding: 0.5rem 0.75rem; font-size: 0.68rem; }
+      .ghost-btn { background: transparent; }
+      button:hover { transform: translateY(-1px); }
+      .hero-stats {
+        display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.8rem; padding: 1rem;
+      }
+      .stat-card {
+        border: 1px solid var(--line); border-radius: 14px; background: var(--panel); padding: 0.9rem 0.8rem;
+      }
+      .stat-card strong { display: block; font-size: clamp(1.5rem, 2vw, 2.2rem); letter-spacing: -0.07em; }
+      .stat-card span { display: block; margin-top: 0.2rem; color: var(--muted); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; }
+
+      .workspace { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr); gap: 1rem; }
+      .panel { padding: 1rem; }
+      .section-panel { display: block; scroll-margin-top: 6rem; }
+      .section-panel.is-hidden { display: none; }
+      .section-header { display: flex; align-items: center; justify-content: space-between; gap: 0.7rem; margin-bottom: 0.8rem; }
+      .section-header h3 { margin: 0; font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+      .section-chip {
+        border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 0.28rem 0.6rem;
+        font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+      }
+
+      .field { margin-bottom: 0.8rem; }
+      label { display: block; margin-bottom: 0.38rem; font-size: 0.74rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+      textarea {
+        width: 100%; min-height: 180px; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+        border-radius: 14px; padding: 0.8rem 0.9rem; resize: vertical;
+      }
+      input[type="url"] {
+        width: 100%; min-height: 48px; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+        border-radius: 14px; padding: 0.75rem 0.9rem;
+      }
+      select {
+        width: 100%; min-height: 48px; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+        border-radius: 14px; padding: 0.65rem 0.9rem;
+      }
+      .char-row {
+        display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 0.7rem;
+        letter-spacing: 0.08em; text-transform: uppercase; margin-top: 0.38rem;
+      }
+      .action-row { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+      .inline-toggle {
+        display: flex; justify-content: space-between; align-items: center; gap: 0.8rem; margin-top: 0.85rem; padding-top: 0.8rem;
+        border-top: 1px solid var(--line);
+      }
+      .switch { position: relative; display: inline-block; width: 52px; height: 28px; }
+      .switch input { opacity: 0; width: 0; height: 0; }
+      .slider {
+        position: absolute; inset: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 999px;
+        transition: 0.2s ease; cursor: pointer;
+      }
+      .slider::before {
+        content: ""; position: absolute; width: 18px; height: 18px; left: 4px; top: 4px; border-radius: 50%; background: var(--ink); transition: 0.2s ease;
+      }
+      .switch input:checked + .slider { background: rgba(36, 95, 73, 0.1); }
+      .switch input:checked + .slider::before { transform: translateX(23px); background: var(--low); }
+
+      .sample-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; margin-top: 0.8rem; }
+      .sample-card {
+        border: 1px solid var(--line); background: var(--panel); border-radius: 14px; padding: 0.75rem 0.8rem; text-align: left;
+        min-height: 130px; cursor: pointer;
+      }
+      .sample-card.active { border-color: var(--focus); background: rgba(37, 99, 235, 0.04); }
+      .sample-card small { display: block; font-size: 0.64rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+      .sample-card strong { display: block; margin: 0.3rem 0 0.2rem; }
+      .sample-meta { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.3rem; }
+      .pill {
+        display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; padding: 0.2rem 0.5rem;
+        font-size: 0.64rem; letter-spacing: 0.08em; text-transform: uppercase; background: var(--card);
+      }
+
+      .results-stack { display: grid; gap: 0.8rem; margin-top: 1rem; }
+      .result-block { border: 1px solid var(--line); background: var(--panel); border-radius: 14px; padding: 0.8rem 0.85rem; }
+      .result-block h4 { margin: 0 0 0.45rem; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+      .message-box {
+        background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.8rem; white-space: pre-wrap;
+        font-family: "Consolas", "SFMono-Regular", monospace; line-height: 1.5;
+      }
+      .highlight-box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.8rem; }
+      .evidence-highlight {
+        display: inline-block; margin: 0.08rem 0.06rem; padding: 0.08rem 0.4rem; background: rgba(242, 215, 138, 0.8);
+        border: 1px solid rgba(122, 92, 27, 0.35); border-radius: 6px; cursor: pointer; font-size: 0.86rem;
+      }
+      .finding-list { display: grid; gap: 0.65rem; }
+      .finding-item {
+        border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 0.7rem; cursor: pointer;
+      }
+      .finding-head { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; margin-bottom: 0.35rem; }
+      .severity-tag {
+        display: inline-block; border-radius: 999px; padding: 0.18rem 0.5rem; border: 1px solid var(--line);
+        font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;
+      }
+      .severity-critical { background: rgba(179, 38, 30, 0.1); color: var(--critical); }
+      .severity-high { background: rgba(198, 90, 44, 0.1); color: var(--high); }
+      .severity-medium { background: rgba(155, 106, 29, 0.12); color: var(--medium); }
+      .severity-low { background: rgba(36, 95, 73, 0.12); color: var(--low); }
+      .finding-item h5 { margin: 0 0 0.25rem; font-size: 1rem; }
+      .finding-item p { margin: 0.24rem 0; color: var(--muted); }
+
+      .verdict-box {
+        border: 2px solid var(--line); border-radius: 18px; background: var(--card); padding: 1rem; margin-bottom: 1rem; position: relative; overflow: hidden;
+      }
+      .verdict-box::after {
+        content: "RISK VERDICT"; position: absolute; top: 16px; right: 18px; font-size: 0.64rem; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase;
+      }
+      .verdict-title { margin: 0 0 0.45rem; font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+      .verdict-level { display: inline-block; margin: 0.2rem 0 0.6rem; font-size: clamp(2.5rem, 5vw, 4.2rem); line-height: 1; letter-spacing: -0.08em; font-weight: 800; }
+      .verdict-score { font-weight: 700; font-size: 1.1rem; margin-bottom: 0.4rem; }
+      .verdict-meter { display: flex; gap: 0.2rem; }
+      .meter-block { flex: 1; height: 12px; border-radius: 999px; background: rgba(18,32,58,0.1); }
+      .meter-block.active { background: var(--critical); }
+      .stamp {
+        position: absolute; right: 22px; top: 30px; width: 150px; height: 150px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        border: 4px solid var(--critical); color: var(--critical); opacity: 0.23; transform: rotate(-7deg); font-size: 1.15rem; letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none;
+      }
+      .stamp::before { content: ""; position: absolute; inset: 12px; border-radius: 50%; border: 2px solid var(--critical); }
+
+      .verdict-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 0.7rem; }
+      .mini-card {
+        border: 1px solid var(--line); border-radius: 12px; background: var(--panel); padding: 0.7rem 0.8rem;
+      }
+      .mini-card strong { display: block; font-size: 1.04rem; }
+      .mini-card span { display: block; margin-top: 0.15rem; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+      .internal-section { display: grid; gap: 0.8rem; }
+      .section-card {
+        border: 1px solid var(--line); background: var(--panel); border-radius: 14px; padding: 0.8rem 0.9rem;
+      }
+      .section-card h4 { margin: 0 0 0.55rem; font-size: 0.74rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+      .calc-list { list-style: none; padding: 0; margin: 0; }
+      .calc-list li { display: flex; justify-content: space-between; gap: 0.6rem; padding: 0.3rem 0; border-bottom: 1px dashed var(--line); }
+      .calc-list li:last-child { border-bottom: none; }
+      .calc-total { font-weight: 700; }
+      .breakdown { display: grid; gap: 0.5rem; }
+      .break-row { display: grid; grid-template-columns: minmax(90px, 1fr) minmax(1fr, 2.5fr) auto; gap: 0.6rem; align-items: center; }
+      .break-row .label { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+      .bar-shell { background: rgba(18,32,58,0.08); height: 12px; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+      .bar-fill { display: block; height: 100%; }
+      .graph { display: grid; gap: 0.45rem; }
+      .graph-node {
+        display: inline-flex; align-items: center; justify-content: center; min-height: 34px; border-radius: 10px; border: 1px solid var(--line); background: var(--card);
+        padding: 0.5rem 0.7rem; font-size: 0.8rem;
+      }
+      .filter-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
+      .filter-btn { min-height: 30px; padding: 0.35rem 0.65rem; font-size: 0.62rem; border-radius: 999px; }
+      .filter-btn.active { background: var(--primary); border-color: var(--primary); color: var(--card); }
+      .info-box { border-radius: 12px; border: 1px solid var(--line); background: var(--card); padding: 0.8rem; color: var(--muted); }
+      .stack-list, .history-list, .selftest-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.35rem; }
+      .stack-list li, .history-list li, .selftest-list li { display: flex; justify-content: space-between; gap: 0.7rem; border-bottom: 1px dashed var(--line); padding: 0.25rem 0; }
+      .stack-list li:last-child, .history-list li:last-child, .selftest-list li:last-child { border-bottom: none; }
+      .risk-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 0.7rem; }
+      .edu-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 0.7rem; }
+      .edu-card { border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 0.7rem; }
+      .edu-card h5 { margin: 0 0 0.3rem; }
+      .edu-card p { margin: 0.25rem 0; color: var(--muted); font-size: 0.83rem; }
+      .challenge-card { border: 1px solid var(--line); border-radius: 16px; background: var(--card); padding: 1rem; margin: 0 0 1.4rem; }
+      .challenge-topline { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+      .challenge-count { color: var(--muted); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; }
+      .challenge-progress { height: 7px; background: var(--panel); border: 1px solid var(--line); border-radius: 99px; overflow: hidden; margin: 0.7rem 0 1rem; }
+      .challenge-progress-fill { height: 100%; width: 0; background: var(--primary); transition: width 0.2s ease; }
+      .challenge-prompt { margin: 0 0 0.45rem; font-size: 1.1rem; }
+      .challenge-message { padding: 0.8rem; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); font-family: "Consolas", "SFMono-Regular", monospace; }
+      .challenge-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; margin-top: 0.8rem; }
+      .challenge-choice { min-height: 48px; border: 1px solid var(--line); border-radius: 10px; padding: 0.65rem 0.8rem; text-align: left; background: var(--panel); color: var(--ink); cursor: pointer; }
+      .challenge-choice:hover:not(:disabled) { border-color: var(--focus); }
+      .challenge-choice:disabled { cursor: default; opacity: 0.85; }
+      .challenge-choice.correct { border-color: var(--low); background: rgba(84, 214, 163, 0.12); }
+      .challenge-choice.incorrect { border-color: var(--critical); background: rgba(255, 107, 120, 0.1); }
+      .challenge-feedback { min-height: 3rem; margin-top: 0.8rem; color: var(--muted); }
+      .challenge-feedback[data-result="correct"] { color: var(--low); }
+      .challenge-feedback[data-result="incorrect"] { color: var(--critical); }
+      .challenge-actions { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem; margin-top: 0.7rem; }
+      .guide-dialog { width: min(700px, calc(100% - 2rem)); max-height: min(90vh, 760px); padding: 0; border: 1px solid var(--line); border-radius: 20px; background: var(--card); color: var(--ink); box-shadow: 0 24px 90px rgba(0,0,0,0.45); }
+      .guide-dialog::backdrop { background: rgba(2, 9, 18, 0.76); backdrop-filter: blur(6px); }
+      .guide-content { padding: clamp(1rem, 4vw, 1.6rem); }
+      .guide-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+      .guide-head h2 { margin: 0.3rem 0; font-size: clamp(1.35rem, 4vw, 1.9rem); }
+      .guide-close { width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 11px; background: var(--panel); color: var(--ink); cursor: pointer; font-size: 1.2rem; }
+      .guide-visual { position: relative; min-height: 190px; overflow: hidden; display: grid; place-items: center; margin: 1rem 0; border: 1px solid var(--line); border-radius: 16px; background: radial-gradient(circle at center, rgba(54,214,195,0.12), transparent 60%), var(--panel); }
+      .guide-visual::before, .guide-visual::after { content: ""; position: absolute; width: 145px; height: 145px; border: 1px solid rgba(54,214,195,0.24); border-radius: 50%; animation: guide-orbit 9s linear infinite; }
+      .guide-visual::after { width: 190px; height: 190px; animation-duration: 14s; animation-direction: reverse; }
+      .guide-core { position: relative; z-index: 1; display: grid; place-items: center; gap: 0.45rem; width: 116px; height: 116px; border: 1px solid rgba(54,214,195,0.5); border-radius: 24px; background: rgba(8,27,41,0.88); color: var(--primary); box-shadow: 0 0 35px rgba(54,214,195,0.12); animation: guide-core-pulse 2.6s ease-in-out infinite; }
+      .guide-core svg { width: 37px; height: 37px; }
+      .guide-core span { font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; }
+      .guide-packet { position: absolute; z-index: 2; display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid rgba(54,214,195,0.45); border-radius: 10px; background: #102b3e; color: #aaf8e9; font-size: 0.7rem; font-weight: 800; animation: guide-packet 3.4s ease-in-out infinite; }
+      .guide-packet-one { left: 16%; top: 28%; }
+      .guide-packet-two { right: 16%; bottom: 26%; animation-delay: -1.7s; }
+      .guide-dialog-copy { min-height: 5rem; margin: 0.55rem 0; color: var(--muted); }
+      .guide-step { color: var(--primary); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+      .guide-actions { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 1rem; }
+      .guide-actions-group { display: flex; gap: 0.55rem; }
+      @keyframes guide-orbit { to { transform: rotate(360deg); } }
+      @keyframes guide-core-pulse { 50% { box-shadow: 0 0 48px rgba(54,214,195,0.22); transform: scale(1.035); } }
+      @keyframes guide-packet { 0%, 100% { transform: translate(0, 0); opacity: 0.7; } 50% { transform: translate(14px, -9px); opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) {
+        .guide-visual::before, .guide-visual::after, .guide-core, .guide-packet { animation: none; }
+        .challenge-progress-fill { transition: none; }
+      }
+      .channel-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem; margin-top: 1rem; }
+      .channel-card { overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: var(--card); }
+      .channel-card img { display: block; width: 100%; height: 190px; object-fit: cover; object-position: center; background: var(--panel); }
+      .channel-card-body { padding: 0.9rem; }
+      .channel-kicker { color: var(--primary); font-size: 0.64rem; letter-spacing: 0.15em; font-weight: 700; }
+      .channel-card h4 { margin: 0.35rem 0 0.45rem; }
+      .channel-card p { margin: 0.35rem 0; color: var(--muted); font-size: 0.85rem; }
+      .channel-card a { display: inline-block; margin-top: 0.4rem; color: var(--focus); font-size: 0.72rem; text-decoration: underline; text-underline-offset: 2px; }
+      .status-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.45rem; }
+      .status-list li { display: flex; align-items: center; justify-content: space-between; gap: 0.7rem; }
+      .inset-note { color: var(--muted); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; }
+      @media (max-width: 960px) {
+        .topbar-inner { grid-template-columns: 1fr; }
+        .meta-note { text-align: left; }
+        .hero, .workspace { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 560px) {
+        .hero-stats, .sample-grid, .risk-grid, .edu-grid, .verdict-grid { grid-template-columns: 1fr; }
+      }
+      @media print {
+        .topbar, .hero-cta, .action-row, .inline-toggle, .filter-row { display: none !important; }
+        .page, .workspace, .hero { display: block; }
+        body { background: white; color: black; }
+      }
+
+      :root {
+        color-scheme: dark;
+        --workspace: #07111f;
+        --panel: #0d1b2a;
+        --card: #102235;
+        --ink: #e7f3fb;
+        --muted: #91aabd;
+        --line: #1d3a4d;
+        --primary: #36d6c3;
+        --primary-soft: rgba(54, 214, 195, 0.12);
+        --critical: #ff6b78;
+        --high: #ffad66;
+        --medium: #f3d36b;
+        --low: #54d6a3;
+        --success: #54d6a3;
+        --focus: #45dccc;
+        --shadow: rgba(0, 0, 0, 0.28);
+      }
+
+      body {
+        background:
+          radial-gradient(ellipse at 78% -12%, rgba(22, 103, 125, 0.22), transparent 38rem),
+          radial-gradient(ellipse at 8% 35%, rgba(20, 84, 107, 0.13), transparent 34rem),
+          var(--workspace);
+        color: var(--ink);
+      }
+      .topbar {
+        background: rgba(7, 17, 31, 0.92);
+        border-bottom-color: rgba(54, 214, 195, 0.18);
+        box-shadow: 0 10px 34px rgba(0, 0, 0, 0.16);
+      }
+      .topbar-inner { grid-template-columns: 1.05fr auto 1.4fr auto; }
+      .brand-mark {
+        border-color: rgba(54, 214, 195, 0.45);
+        background: linear-gradient(145deg, rgba(54, 214, 195, 0.2), rgba(20, 84, 107, 0.18));
+        color: var(--primary);
+        box-shadow: 0 0 22px rgba(54, 214, 195, 0.13), inset 0 1px 0 rgba(255,255,255,0.08);
+      }
+      .brand-mark svg path:first-child { fill: rgba(54, 214, 195, 0.12); }
+      .brand-mark svg path:last-child { stroke: rgba(54, 214, 195, 0.55); }
+      .brand h1 { color: #f1fbff; }
+      .brand small, .meta-note { color: #7f9bad; }
+      .status-pill {
+        background: rgba(16, 34, 53, 0.82);
+        border-color: var(--line);
+        color: var(--muted);
+      }
+      .status-pill.online { border-color: rgba(84, 214, 163, 0.32); color: #79e5b9; }
+      .page { padding-top: 1.4rem; }
+      .hero { display: block; margin-bottom: 1.2rem; }
+      .hero-copy, .panel {
+        background: linear-gradient(145deg, rgba(16, 34, 53, 0.97), rgba(11, 27, 43, 0.98));
+        border-color: var(--line);
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.025);
+      }
+      body[data-view]:not([data-view="analyze"]) .hero { display: none; }
+      .hero-copy {
+        position: relative;
+        overflow: hidden;
+        padding: clamp(1.4rem, 3vw, 2.5rem);
+      }
+      .hero-copy::after {
+        content: "";
+        position: absolute;
+        width: 18rem;
+        height: 18rem;
+        top: -9rem;
+        right: 8%;
+        border: 1px solid rgba(54, 214, 195, 0.2);
+        border-radius: 50%;
+        box-shadow: 0 0 0 2rem rgba(54, 214, 195, 0.025), 0 0 0 4rem rgba(54, 214, 195, 0.018);
+        pointer-events: none;
+      }
+      .eyebrow { color: #59d9ca; }
+      .hero-copy h2 { color: #f2f9ff; max-width: 18ch; }
+      .hero-copy p { color: #9bb4c5; }
+      .dashboard-grid { gap: 0.9rem; margin: 1rem 0 1.2rem; }
+      .dashboard-card, .dashboard-card:nth-child(n) {
+        min-height: 142px;
+        border-color: #20445a;
+        background: linear-gradient(145deg, rgba(16, 38, 57, 0.98), rgba(10, 27, 42, 0.98));
+        color: var(--ink);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.035);
+        text-align: left;
+      }
+      .dashboard-card:hover {
+        border-color: rgba(54, 214, 195, 0.58);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2), 0 0 24px rgba(54, 214, 195, 0.07);
+      }
+      .dashboard-card[aria-pressed="true"] {
+        border-color: rgba(54, 214, 195, 0.72);
+        box-shadow: inset 0 0 0 1px rgba(54, 214, 195, 0.14), 0 0 24px rgba(54, 214, 195, 0.08);
+      }
+      .dashboard-card::after {
+        content: "";
+        position: absolute;
+        width: 5rem;
+        height: 5rem;
+        right: -1.2rem;
+        bottom: -2rem;
+        border: 1px solid rgba(54, 214, 195, 0.16);
+        border-radius: 50%;
+        box-shadow: 0 0 0 0.8rem rgba(54, 214, 195, 0.025);
+      }
+      .dashboard-icon {
+        width: 44px;
+        height: 44px;
+        border-color: rgba(54, 214, 195, 0.28);
+        background: rgba(54, 214, 195, 0.1);
+        box-shadow: 0 0 18px rgba(54, 214, 195, 0.08);
+      }
+      .dashboard-card strong { color: #e7f3fb; }
+      .dashboard-card span { color: #91aabd; }
+      .primary-btn {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #06201f;
+        box-shadow: 0 0 20px rgba(54, 214, 195, 0.14);
+      }
+      .secondary-btn, .ghost-btn, .small-btn, .filter-btn {
+        background: #122b3e;
+        border-color: #285064;
+        color: #c3d8e5;
+      }
+      .secondary-btn:hover, .filter-btn:hover { border-color: rgba(54, 214, 195, 0.5); }
+      .section-header h3, label, .result-block h4, .verdict-title { color: #91aabd; }
+      .section-chip, .pill {
+        background: #10273a;
+        border-color: #24465a;
+        color: #a9c1d0;
+      }
+      textarea, input[type="url"], .sample-card, .result-block, .section-card, .mini-card, .info-box {
+        background: #0a1a29;
+        border-color: #1d3a4d;
+        color: var(--ink);
+      }
+      textarea::placeholder, input[type="url"]::placeholder { color: #6e899a; }
+      .sample-card.active {
+        border-color: var(--focus);
+        background: rgba(54, 214, 195, 0.08);
+      }
+      .message-box, .highlight-box, .finding-item, .graph-node {
+        background: #102235;
+        border-color: #1d3a4d;
+        color: #dceaf2;
+      }
+      .evidence-highlight {
+        background: rgba(243, 211, 107, 0.16);
+        border-color: rgba(243, 211, 107, 0.4);
+        color: #ffe89a;
+      }
+      .verdict-box {
+        background: linear-gradient(145deg, #10283a, #0b1b2a);
+        border-color: #285064;
+      }
+      .bar-shell, .meter-block { background-color: #1a3447; }
+      .switch input:checked + .slider { background: rgba(54, 214, 195, 0.16); }
+      .switch input:checked + .slider::before { background: var(--primary); }
+      .status-pill.offline { border-color: rgba(255, 107, 120, 0.38); }
+      .topbar-inner { grid-template-columns: 1.05fr auto 1.3fr auto auto; }
+      .theme-toggle {
+        width: 38px;
+        height: 38px;
+        border: 1px solid #285064;
+        border-radius: 12px;
+        background: #122b3e;
+        color: #c3d8e5;
+        padding: 0;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.05rem;
+        line-height: 1;
+      }
+      .theme-toggle:hover { border-color: rgba(54, 214, 195, 0.5); }
+      .theme-toggle svg { width: 18px; height: 18px; display: block; }
+      [data-theme="light"] {
+        color-scheme: light;
+        --workspace: #eef3f8;
+        --panel: #f7f9fc;
+        --card: #ffffff;
+        --ink: #1b2e42;
+        --muted: #64788b;
+        --line: #dbe5ed;
+        --primary: #087f8c;
+        --primary-soft: rgba(8, 127, 140, 0.08);
+        --critical: #bd3c51;
+        --high: #c26b35;
+        --medium: #98701d;
+        --low: #267b5b;
+        --success: #267b5b;
+        --focus: #087f8c;
+        --shadow: rgba(24, 48, 72, 0.08);
+      }
+      [data-theme="light"] body {
+        background:
+          radial-gradient(ellipse at 78% -12%, rgba(45, 145, 165, 0.1), transparent 38rem),
+          #eef3f8;
+        color: var(--ink);
+      }
+      [data-theme="light"] .topbar {
+        background: rgba(247, 250, 252, 0.94);
+        border-bottom-color: var(--line);
+        box-shadow: 0 8px 24px rgba(24, 48, 72, 0.06);
+      }
+      [data-theme="light"] .brand-mark {
+        border-color: rgba(8, 127, 140, 0.28);
+        background: linear-gradient(145deg, rgba(8, 127, 140, 0.12), rgba(45, 145, 165, 0.08));
+        color: var(--primary);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+      }
+      [data-theme="light"] .brand h1,
+      [data-theme="light"] .dashboard-card strong { color: var(--ink); }
+      [data-theme="light"] .brand small,
+      [data-theme="light"] .meta-note { color: var(--muted); }
+      [data-theme="light"] .status-pill,
+      [data-theme="light"] .theme-toggle {
+        background: rgba(255,255,255,0.82);
+        border-color: var(--line);
+        color: var(--muted);
+      }
+      [data-theme="light"] .status-pill.online { border-color: rgba(38, 123, 91, 0.28); color: var(--success); }
+      [data-theme="light"] .hero-copy,
+      [data-theme="light"] .panel {
+        background: rgba(255,255,255,0.96);
+        border-color: var(--line);
+        box-shadow: 0 14px 36px rgba(24, 48, 72, 0.07);
+      }
+      [data-theme="light"] .hero-copy::after { border-color: rgba(8, 127, 140, 0.16); }
+      [data-theme="light"] .eyebrow { color: var(--primary); }
+      [data-theme="light"] .hero-copy h2 { color: #152d41; }
+      [data-theme="light"] .hero-copy p { color: var(--muted); }
+      [data-theme="light"] .dashboard-card,
+      [data-theme="light"] .dashboard-card:nth-child(n) {
+        border-color: var(--line);
+        background: linear-gradient(145deg, #ffffff, #f1f7fa);
+        color: var(--ink);
+        box-shadow: inset 0 1px 0 #ffffff;
+      }
+      [data-theme="light"] .dashboard-card:hover {
+        border-color: rgba(8, 127, 140, 0.38);
+        box-shadow: 0 10px 24px rgba(24, 48, 72, 0.1);
+      }
+      [data-theme="light"] .dashboard-card[aria-pressed="true"] {
+        border-color: rgba(8, 127, 140, 0.6);
+        box-shadow: inset 0 0 0 1px rgba(8, 127, 140, 0.1), 0 8px 22px rgba(24, 48, 72, 0.08);
+      }
+      [data-theme="light"] .dashboard-card::after { border-color: rgba(8, 127, 140, 0.14); }
+      [data-theme="light"] .dashboard-icon {
+        border-color: rgba(8, 127, 140, 0.2);
+        background: rgba(8, 127, 140, 0.07);
+        box-shadow: none;
+      }
+      [data-theme="light"] .dashboard-card span { color: var(--muted); }
+      [data-theme="light"] .primary-btn {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #ffffff;
+        box-shadow: none;
+      }
+      [data-theme="light"] .secondary-btn,
+      [data-theme="light"] .ghost-btn,
+      [data-theme="light"] .small-btn,
+      [data-theme="light"] .filter-btn {
+        background: #f3f7fa;
+        border-color: var(--line);
+        color: var(--ink);
+      }
+      [data-theme="light"] .section-header h3,
+      [data-theme="light"] label,
+      [data-theme="light"] .result-block h4,
+      [data-theme="light"] .verdict-title { color: var(--muted); }
+      [data-theme="light"] .section-chip,
+      [data-theme="light"] .pill {
+        background: #f3f7fa;
+        border-color: var(--line);
+        color: var(--muted);
+      }
+      [data-theme="light"] textarea,
+      [data-theme="light"] input[type="url"],
+      [data-theme="light"] select,
+      [data-theme="light"] .sample-card,
+      [data-theme="light"] .result-block,
+      [data-theme="light"] .section-card,
+      [data-theme="light"] .mini-card,
+      [data-theme="light"] .info-box {
+        background: #f8fafc;
+        border-color: var(--line);
+        color: var(--ink);
+      }
+      [data-theme="light"] textarea::placeholder,
+      [data-theme="light"] input[type="url"]::placeholder { color: #8799a8; }
+      [data-theme="light"] .sample-card.active { border-color: var(--focus); background: rgba(8, 127, 140, 0.05); }
+      [data-theme="light"] .message-box,
+      [data-theme="light"] .highlight-box,
+      [data-theme="light"] .finding-item,
+      [data-theme="light"] .graph-node {
+        background: #ffffff;
+        border-color: var(--line);
+        color: var(--ink);
+      }
+      [data-theme="light"] .evidence-highlight {
+        background: rgba(243, 211, 107, 0.3);
+        border-color: rgba(152, 112, 29, 0.3);
+        color: #684d10;
+      }
+      [data-theme="light"] .verdict-box { background: linear-gradient(145deg, #ffffff, #f4f8fa); border-color: var(--line); }
+      [data-theme="light"] .bar-shell,
+      [data-theme="light"] .meter-block { background-color: #e3ebf0; }
+      [data-theme="light"] .switch input:checked + .slider { background: rgba(8, 127, 140, 0.12); }
+      [data-theme="light"] .switch input:checked + .slider::before { background: var(--primary); }
+      [data-theme="light"] .status-pill.offline { border-color: rgba(189, 60, 81, 0.28); }
+      [data-theme="light"] .channel-card { background: #ffffff; border-color: var(--line); }
+      [data-theme="light"] .channel-card img { background: #e8f0f4; }
+      [data-theme="light"] .channel-kicker, [data-theme="light"] .channel-card a { color: var(--primary); }
+      [data-theme="light"] .challenge-card { background: #ffffff; border-color: var(--line); }
+      [data-theme="light"] .challenge-message, [data-theme="light"] .challenge-choice { background: #f4f8fb; border-color: var(--line); color: var(--ink); }
+      [data-theme="light"] .challenge-choice.correct { border-color: var(--low); background: rgba(38, 123, 91, 0.1); }
+      [data-theme="light"] .challenge-choice.incorrect { border-color: var(--critical); background: rgba(189, 60, 81, 0.08); }
+      [data-theme="light"] .guide-dialog { background: #ffffff; color: var(--ink); }
+      [data-theme="light"] .guide-visual { background: radial-gradient(circle at center, rgba(8,127,140,0.1), transparent 60%), #f1f7fa; }
+      [data-theme="light"] .guide-visual::before, [data-theme="light"] .guide-visual::after { border-color: rgba(8,127,140,0.2); }
+      [data-theme="light"] .guide-core { background: rgba(255,255,255,0.92); }
+      [data-theme="light"] .guide-packet { background: #ffffff; color: var(--primary); }
+      @media (max-width: 960px) {
+        .topbar-inner { grid-template-columns: minmax(0, 1fr) auto; }
+        .status-pill { grid-column: 2; grid-row: 1; }
+        .meta-note { grid-column: 1; grid-row: 2; text-align: left; }
+        .theme-toggle { grid-column: 2; grid-row: 2; justify-self: end; }
+      }
+      @media (max-width: 700px) {
+        .dashboard-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+      @media (max-width: 560px) {
+        .dashboard-grid { grid-template-columns: 1fr; }
+        .channel-grid { grid-template-columns: 1fr; }
+        .challenge-choices { grid-template-columns: 1fr; }
+        .guide-actions { align-items: stretch; }
+        .guide-actions > button { flex: 1; }
+        .guide-actions-group { flex: 1; }
+        .guide-actions-group button { flex: 1; }
+        .dashboard-card { min-height: 112px; }
+        .topbar-inner { grid-template-columns: minmax(0, 1fr) auto; }
+        .brand small { font-size: 0.6rem; }
+        .status-pill { padding: 0.4rem 0.55rem; font-size: 0.6rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-mark" aria-label="BITSHIELD protection icon" title="Protected" role="button" tabindex="0">
+            <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+              <path d="M32 6L51 13v16.6c0 11.4-7.2 22.1-19 28.4C20.2 51.7 13 41 13 29.6V13l19-7z" fill="rgba(15, 23, 42, 0.08)" stroke="currentColor" stroke-width="3"/>
+              <path d="M24 30.5l6 6 11-14" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M32 6v16" fill="none" stroke="rgba(15, 23, 42, 0.35)" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="brand-title" tabindex="0" role="button" aria-label="Open investigate section" style="cursor:pointer;">
+            <h1>BITSHIELD</h1>
+            <small>Bitcoin Scam Risk Intelligence</small>
+          </div>
+        </div>
+        <div class="status-pill online" id="networkStatus" aria-live="polite"><span class="status-dot"></span><span id="networkLabel">Online</span></div>
+        <div class="meta-note">Local analysis · external example images</div>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode" title="Switch to light mode">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.2 15.1A8.4 8.4 0 0 1 8.9 3.8 8.7 8.7 0 1 0 20.2 15.1Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <div class="eyebrow">Cybersecurity evidence desk</div>
+          <h2 id="hero-title">Investigate before you trust.</h2>
+          <p>Review suspicious Bitcoin offers, surface the warning patterns, and understand why a message feels risky before any payment is sent.</p>
+          <div class="hero-cta">
+            <button class="primary-btn" id="focusInvestigation" type="button">Start Investigation</button>
+            <button class="secondary-btn" id="loadDefaultSample" type="button">Load Sample</button>
+            <button class="secondary-btn" id="openGuideBtn" type="button">▶ Quick walkthrough</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="dashboard-grid" aria-label="Dashboard shortcuts">
+        <button class="dashboard-card" type="button" data-section="analyze">
+          <div class="dashboard-icon">🛡️</div>
+          <strong>Analyze</strong>
+          <span>Run a fresh scam check</span>
+        </button>
+        <button class="dashboard-card" type="button" data-section="evidence">
+          <div class="dashboard-icon">🔎</div>
+          <strong>Evidence</strong>
+          <span>Inspect risk signals</span>
+        </button>
+        <button class="dashboard-card" type="button" data-section="train">
+          <div class="dashboard-icon">📚</div>
+          <strong>Training</strong>
+          <span>Learn scam patterns</span>
+        </button>
+        <button class="dashboard-card" type="button" data-section="about">
+          <div class="dashboard-icon">🗂️</div>
+          <strong>Case desk</strong>
+          <span>Manage reports and history</span>
+        </button>
+      </div>
+
+      <section class="workspace section-panel" id="analyze" data-section="analyze">
+        <div class="panel">
+          <div class="section-header">
+            <h3>01 — Submit the evidence</h3>
+            <div class="section-chip" id="caseBadge">CASE</div>
+          </div>
+
+          <div class="field">
+            <label for="sourceChannel">Message source</label>
+            <select id="sourceChannel" aria-describedby="channelHelp">
+              <option value="auto">Auto-detect source</option>
+              <option value="email">Spam email / exchange notice</option>
+              <option value="social">Social media post / message</option>
+              <option value="ad">Pop-up / banner / text ad</option>
+              <option value="sms">SMS / text message</option>
+            </select>
+            <div class="char-row" id="channelHelp"><span>Choose a source or let BITSHIELD infer it</span><span>Processed locally</span></div>
+          </div>
+
+          <div class="field">
+            <label for="linkInput">Suspicious link <span class="inset-note">Optional · checked locally, never opened</span></label>
+            <input id="linkInput" type="url" inputmode="url" maxlength="2000" placeholder="https://example.com/claim" aria-describedby="linkHelp" />
+            <div class="char-row" id="linkHelp"><span>Paste the URL as received</span><span>Not visited or fetched</span></div>
+          </div>
+
+          <div class="field">
+            <label for="messageInput">Suspicious message or offer <span class="inset-note">Optional</span></label>
+            <textarea id="messageInput" maxlength="5000" aria-describedby="charCounter"></textarea>
+            <div class="char-row"><span>Message characters</span><span id="charCounter">0 / 5000</span></div>
+          </div>
+
+          <div class="action-row">
+            <button class="primary-btn" id="analyzeBtn" type="button">Check Message</button>
+            <button class="secondary-btn" id="clearBtn" type="button">Clear</button>
+            <button class="secondary-btn" id="sampleBtn" type="button">Load Sample</button>
+          </div>
+
+          <div class="inline-toggle" aria-label="Live analysis toggle">
+            <label for="liveToggle">Live Analysis</label>
+            <label class="switch" aria-label="Toggle live analysis">
+              <input id="liveToggle" type="checkbox" />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="section-header" style="margin-top: 1rem;">
+            <h3>Sample intelligence library</h3>
+          </div>
+          <div id="sampleGrid" class="sample-grid"></div>
+
+          <div class="results-stack">
+            <div class="result-block" id="evidence">
+              <h4>Original message</h4>
+              <div id="originalMessage" class="message-box">No message analyzed yet.</div>
+            </div>
+
+            <div class="result-block">
+              <h4>Highlighted evidence</h4>
+              <div id="highlightPanel" class="highlight-box">Awaiting analysis.</div>
+            </div>
+
+            <div class="result-block">
+              <h4>Warning findings</h4>
+              <div id="findingPanel" class="finding-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="verdict-box" aria-live="polite">
+            <div class="verdict-title">Risk verdict</div>
+            <div id="verdictLevel" class="verdict-level">LOW</div>
+            <div id="verdictScore" class="verdict-score">0 / 100</div>
+            <div id="verdictMeter" class="verdict-meter"></div>
+            <div id="stampLabel" class="stamp">LOW</div>
+          </div>
+
+          <div class="verdict-grid">
+            <div class="mini-card"><strong id="warningCount">0</strong><span>Warning signals</span></div>
+            <div class="mini-card"><strong id="sourceCount">0</strong><span>Evidence sources</span></div>
+          </div>
+
+          <div id="rightPanel" class="internal-section"></div>
+        </div>
+      </section>
+
+      <section id="train" class="panel section-panel is-hidden" data-section="train" style="margin-top: 1rem;">
+        <div class="section-header">
+          <h3>Common scam delivery channels</h3>
+        </div>
+        <p class="inset-note">These examples illustrate common lures. Images load from Wikimedia Commons when online; the checker itself never sends your pasted content to those sites. External image requests may expose normal connection metadata.</p>
+        <section class="challenge-card" aria-labelledby="challengeTitle">
+          <div class="challenge-topline">
+            <div>
+              <span class="channel-kicker">INTERACTIVE TRAINING</span>
+              <h3 id="challengeTitle" class="challenge-prompt">Spot the red flag</h3>
+            </div>
+            <span class="challenge-count" id="challengeCount" aria-live="polite">Ready · 4 rounds</span>
+          </div>
+          <div class="challenge-progress" role="progressbar" aria-label="Challenge progress" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0">
+            <div class="challenge-progress-fill" id="challengeProgressFill"></div>
+          </div>
+          <p id="challengeScenario" class="challenge-message"></p>
+          <div id="challengeChoices" class="challenge-choices"></div>
+          <div id="challengeFeedback" class="challenge-feedback" aria-live="polite">Choose the strongest warning sign in the message.</div>
+          <div class="challenge-actions">
+            <span class="challenge-count" id="challengeScore">Score: 0</span>
+            <button class="primary-btn small-btn" id="challengeNextBtn" type="button" disabled>Next scenario</button>
+          </div>
+        </section>
+        <div class="channel-grid">
+          <article class="channel-card">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/8d/Delphish_certain_phishing.jpg" alt="Illustration representing a phishing message" loading="lazy" referrerpolicy="no-referrer" />
+            <div class="channel-card-body">
+              <span class="channel-kicker">01 / INBOX</span>
+              <h4>Spam email</h4>
+              <p>Bulk messages imitate exchanges, wallet providers, and retailers to steal logins or direct people to lookalike pages.</p>
+              <p><strong>Check:</strong> sender domain, unexpected attachments, login links, and pressure to “verify” an account.</p>
+              <a href="https://commons.wikimedia.org/wiki/File:Delphish_certain_phishing.jpg" target="_blank" rel="noopener noreferrer">Image: Strizivojna · CC BY-SA 4.0</a>
+            </div>
+          </article>
+          <article class="channel-card">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/7/7c/ClickFix_Example_English.png" alt="Example of a deceptive browser prompt used to persuade a user to take an unsafe action" loading="lazy" referrerpolicy="no-referrer" />
+            <div class="channel-card-body">
+              <span class="channel-kicker">02 / FEED</span>
+              <h4>Social posts & messages</h4>
+              <p>“Free Bitcoin” giveaways and investment pitches collect contact details, then move targets into private chats or external sites.</p>
+              <p><strong>Check:</strong> off-platform redirects, fake endorsements, and requests for contact info or wallet access.</p>
+              <a href="https://commons.wikimedia.org/wiki/File:ClickFix_Example_English.png" target="_blank" rel="noopener noreferrer">Image: Wikimedia Commons · Public domain</a>
+            </div>
+          </article>
+          <article class="channel-card">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/8d/Computer_virus_scam.jpg" alt="Example scam alert displayed as a computer pop-up" loading="lazy" referrerpolicy="no-referrer" />
+            <div class="channel-card-body">
+              <span class="channel-kicker">03 / DISPLAY</span>
+              <h4>Pop-ups & banner ads</h4>
+              <p>Malicious ads can imitate transfer notifications or show a believable fake balance to lure people into a fraudulent claim page.</p>
+              <p><strong>Check:</strong> unexpected balances, countdowns, download prompts, and payment demands to “release” funds.</p>
+              <a href="https://commons.wikimedia.org/wiki/File:Computer_virus_scam.jpg" target="_blank" rel="noopener noreferrer">Image: Packer1028 · CC0</a>
+            </div>
+          </article>
+          <article class="channel-card">
+            <img src="https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Betrugs-SMS_%28Deutschland_2023%29.jpg/500px-Betrugs-SMS_%28Deutschland_2023%29.jpg" alt="Example of a fraudulent SMS message" loading="lazy" referrerpolicy="no-referrer" />
+            <div class="channel-card-body">
+              <span class="channel-kicker">04 / MOBILE</span>
+              <h4>SMS & text messages</h4>
+              <p>Mass texts use urgent calls to action, short links, or “reply to opt in” language to release a fake balance.</p>
+              <p><strong>Check:</strong> unknown sender, reply prompts, shortened links, and requests to confirm or unlock funds.</p>
+              <a href="https://commons.wikimedia.org/wiki/File:Betrugs-SMS_(Deutschland_2023).jpg" target="_blank" rel="noopener noreferrer">Image: Wikimedia Commons · Public domain</a>
+            </div>
+          </article>
+        </div>
+        <div class="section-header" style="margin-top: 1.4rem;">
+          <h3>Scam patterns 101</h3>
+        </div>
+        <div id="educationGrid" class="edu-grid"></div>
+      </section>
+
+      <section id="about" class="panel section-panel is-hidden" data-section="about" style="margin-top: 1rem;">
+        <div class="section-header">
+          <h3>Case management</h3>
+          <button class="secondary-btn small-btn" id="newCaseBtn" type="button">New Case</button>
+        </div>
+        <div id="caseMeta" class="info-box" aria-live="polite">No case data yet.</div>
+        <div class="action-row" style="margin-top: 0.8rem;">
+          <button class="secondary-btn" id="copySummaryBtn" type="button">Copy Safety Summary</button>
+          <button class="secondary-btn" id="printReportBtn" type="button">Print Evidence Report</button>
+          <button class="secondary-btn" id="clearHistoryBtn" type="button">Clear Local History</button>
+        </div>
+      </section>
+    </main>
+
+    <dialog class="guide-dialog" id="guideDialog" aria-labelledby="guideTitle">
+      <div class="guide-content">
+        <div class="guide-head">
+          <div>
+            <span class="channel-kicker">BITSHIELD · QUICK WALKTHROUGH</span>
+            <h2 id="guideTitle">A safer check in three steps</h2>
+          </div>
+          <button class="guide-close" id="closeGuideBtn" type="button" aria-label="Close walkthrough">×</button>
+        </div>
+        <div class="guide-visual" id="guideVisual" data-step="0" aria-hidden="true">
+          <span class="guide-packet guide-packet-one">URL</span>
+          <div class="guide-core">
+            <svg viewBox="0 0 48 48" fill="none"><path d="M24 4 39 10v12c0 9-5.7 17-15 22C14.7 39 9 31 9 22V10l15-6Z" stroke="currentColor" stroke-width="2.5"/><path d="m17 23 5 5 10-11" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Local scan</span>
+          </div>
+          <span class="guide-packet guide-packet-two">RISK</span>
+        </div>
+        <span class="guide-step" id="guideStepLabel" aria-live="polite">STEP 1 OF 3</span>
+        <p class="guide-dialog-copy" id="guideDescription"></p>
+        <div class="guide-actions">
+          <button class="secondary-btn" id="tryGuideSampleBtn" type="button">Try a sample</button>
+          <div class="guide-actions-group">
+            <button class="secondary-btn" id="previousGuideBtn" type="button">Back</button>
+            <button class="primary-btn" id="nextGuideBtn" type="button">Next</button>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <script>
+      (function () {
+        'use strict';
+
+        const SAMPLE_LIBRARY = [
+          {
+            id: 'guaranteed-profit',
+            label: 'Guaranteed Profit',
+            category: 'Investment',
+            difficulty: 'High',
+            risk: 'CRITICAL',
+            description: 'Guaranteed daily returns and a direct Bitcoin transfer request.',
+            value: 'Guaranteed 8% daily return. No risk. Send 0.05 BTC to our wallet and we will return 1 BTC in two days. Act now before the offer ends.'
+          },
+          {
+            id: 'fake-giveaway',
+            label: 'Fake Giveaway',
+            category: 'Giveaway',
+            difficulty: 'Medium',
+            risk: 'CRITICAL',
+            description: 'Winner message requiring upfront wallet funding.',
+            value: 'You have been selected for our Bitcoin giveaway. Send 0.02 BTC to confirm your wallet and receive 10 BTC free. This offer is valid only today.'
+          },
+          {
+            id: 'fake-support',
+            label: 'Fake Support',
+            category: 'Impersonation',
+            difficulty: 'High',
+            risk: 'CRITICAL',
+            description: 'Support asks for recovery credentials and seed phrases.',
+            value: 'Support here. We detected a wallet issue. Please send your seed phrase to verify your wallet and restore access immediately.'
+          },
+          {
+            id: 'withdrawal-fee',
+            label: 'Withdrawal Fee',
+            category: 'Advance fee',
+            difficulty: 'Medium',
+            risk: 'HIGH',
+            description: 'Funds are blocked unless an upfront fee is paid.',
+            value: 'Your account is blocked. Pay a withdrawal fee of 0.01 BTC before we can release your funds. This fee is non-refundable and urgent.'
+          },
+          {
+            id: 'normal-question',
+            label: 'Normal Question',
+            category: 'General',
+            difficulty: 'Low',
+            risk: 'LOW',
+            description: 'Ordinary informational request with no pressure.',
+            value: 'What is the current Bitcoin price today?'
+          }
+        ];
+
+        const GUIDE_STEPS = [
+          {
+            title: 'Paste the evidence',
+            description: 'Add a suspicious link, the message, or both. The checker analyzes the text in your browser and never opens the pasted link.'
+          },
+          {
+            title: 'Run the local check',
+            description: 'Choose the message source or leave it on Auto-detect, then select Check Message to look for scam patterns and context clues.'
+          },
+          {
+            title: 'Review the explanation',
+            description: 'Read the risk level, highlighted phrases, and recommended next steps. A low score is not proof that a message is safe.'
+          }
+        ];
+
+        const RULES = [
+          { id: 1, label: 'Guaranteed profit / no-risk promise', weight: 22, regex: /(guaranteed|zero[- ]?risk|no[- ]?risk|sure[- ]?profit|assured|risk[- ]?free)/i, family: 'Investment', stage: 'Trust' },
+          { id: 2, label: 'Unrealistic return claim', weight: 20, regex: /(\d+%|\d+\.\d+%)\s*(daily|weekly|monthly|annual).*?(profit|return)|(?:double|triple|10x|20x|50x|100x).*?(return|profit|gain)/i, family: 'Investment', stage: 'Trust' },
+          { id: 3, label: 'Giveaway or selected winner', weight: 18, regex: /(selected|winner|giveaway|free btc|claim your btc|you were chosen|free bitcoin)/i, family: 'Giveaway', stage: 'Trust' },
+          { id: 4, label: 'Send bitcoin to receive more', weight: 28, regex: /(send\s+(?:0?\.?\d+\s+)?btc|send\s+bitcoin|pay\s+(?:0?\.?\d+\s+)?btc|deposit.*get.*back|send.*receive.*more)/i, family: 'Payment', stage: 'Payment' },
+          { id: 5, label: 'Urgency / counting down', weight: 11, regex: /(urgent|hurry|act now|today only|limited time|deadline|before.*ends|expires.*today|immediately)/i, family: 'Pressure', stage: 'Pressure' },
+          { id: 6, label: 'Seed phrase or key request', weight: 40, regex: /(seed phrase|recovery phrase|private key|wallet key|secret key|mnemonic|backup phrase)/i, family: 'Credential Theft', stage: 'Credential' },
+          { id: 7, label: 'Password, OTP, or 2FA request', weight: 30, regex: /(password|otp|2fa|two[- ]?factor|verification code|sms code|one[- ]?time code|login code)/i, family: 'Credential Theft', stage: 'Credential' },
+          { id: 8, label: 'Support impersonation', weight: 18, regex: /(support team|wallet support|customer service|official support|support here|admin support|exchange support)/i, family: 'Impersonation', stage: 'Trust' },
+          { id: 9, label: 'Fake security alert', weight: 14, regex: /(security alert|wallet alert|account suspended|restricted account|detected suspicious activity|security review|verification required)/i, family: 'Impersonation', stage: 'Pressure' },
+          { id: 10, label: 'Untraceable payment method', weight: 25, regex: /(cashapp|zelle|venmo|gift card|prepaid card|bitcoin only|crypto only|untraceable|wire transfer)/i, family: 'Payment', stage: 'Payment' },
+          { id: 11, label: 'Secretive instructions', weight: 10, regex: /(secret|confidential|private only|keep this between us|do not tell anyone|off the record)/i, family: 'Pressure', stage: 'Pressure' },
+          { id: 12, label: 'Upfront fee or release fee', weight: 20, regex: /(activation fee|processing fee|withdrawal fee|recovery fee|release fee|unlock fee|refundable fee|deposit fee)/i, family: 'Advance Fee', stage: 'Payment' },
+          { id: 13, label: 'Recovery fraud promise', weight: 22, regex: /(recover.*bitcoin|lost.*bitcoin|recovery.*wallet|get your funds back|recover your funds|stolen wallet|lost funds)/i, family: 'Recovery', stage: 'Trust' },
+          { id: 14, label: 'Remote access request', weight: 25, regex: /(remote access|teamviewer|anydesk|screen share|install.*software|download.*app|allow remote control|remote desktop)/i, family: 'Credential Theft', stage: 'Credential' },
+          { id: 15, label: 'Legal or police threat', weight: 10, regex: /(arrest|legal action|police|court order|frozen account|fraud investigation|law enforcement|legal notice)/i, family: 'Pressure', stage: 'Pressure' },
+          { id: 16, label: 'Unexpected crypto payment request', weight: 12, regex: /(pay.*bitcoin|send.*crypto|crypto payment|bitcoin payment|payment request.*bitcoin|request.*crypto)/i, family: 'Payment', stage: 'Payment' },
+          { id: 17, label: 'Romance or mentor manipulation', weight: 14, regex: /(mentor|coach|romance|love interest|invest together|trust me|exclusive opportunity|special connection)/i, family: 'Investment', stage: 'Trust' },
+          { id: 18, label: 'Proof or celebrity claims', weight: 10, regex: /(testimonials|proof|celebrity|endorsement|verified by|top investor|wall of proof|success stories)/i, family: 'Impersonation', stage: 'Trust' },
+          { id: 19, label: 'Brand impersonation', weight: 12, regex: /(official.*account|verified.*wallet|support.*wallet|bitcoin.*team|exchange.*team|brand.*official|fake.*exchange)/i, family: 'Impersonation', stage: 'Impersonation' },
+          { id: 20, label: 'Authority or licensing claim', weight: 12, regex: /(licensed|regulated|government approved|certified|official partner|approved by|licensed broker|government license|audit certificate)/i, family: 'Impersonation', stage: 'Trust' },
+          { id: 21, label: 'Fake balance or release prompt', weight: 22, regex: /(fake balance|pending balance|balance ready to release|release.{0,40}(?:balance|funds)|unlock.{0,30}(?:balance|funds)|funds ready to release|transfer notification|claim page)/i, family: 'Advance Fee', stage: 'Payment' },
+          { id: 22, label: 'SMS opt-in release lure', weight: 20, regex: /(reply\s+(?:yes|start|claim).{0,40}(?:opt[- ]?in|release|balance)|opt[- ]?in.{0,40}(?:release|balance|funds)|(?:release|unlock).{0,30}balance)/i, family: 'Pressure', stage: 'Pressure' },
+          { id: 23, label: 'Off-platform redirect or contact harvesting', weight: 15, regex: /(off[- ]platform|move (?:this|the conversation) to|continue (?:on|via) (?:telegram|whatsapp|signal)|collect.{0,30}(?:contact|phone|email)|provide.{0,30}(?:phone|email address))/i, family: 'Impersonation', stage: 'Trust' }
+        ];
+
+        const CHALLENGE_CASES = [
+          {
+            channel: 'EMAIL',
+            message: 'Exchange Security: Your wallet is locked. Sign in using this link within 15 minutes or your Bitcoin will be lost.',
+            choices: ['The email says Bitcoin', 'Unexpected sign-in link and urgent deadline', 'It has a subject line', 'It mentions a wallet'],
+            answer: 1,
+            explanation: 'Urgency paired with an unexpected sign-in link is a strong phishing warning. Open the exchange app or type its known official address yourself instead.'
+          },
+          {
+            channel: 'SOCIAL',
+            message: 'You won our free Bitcoin giveaway! Send a small deposit first, then DM us your phone number to receive the prize.',
+            choices: ['A giveaway asks for an upfront deposit and private contact details', 'The post is on social media', 'It uses an exclamation mark', 'It mentions Bitcoin'],
+            answer: 0,
+            explanation: 'A prize that requires payment first is a classic advance-fee lure, and moving to private messages can expose personal details. Do not pay or share contact information.'
+          },
+          {
+            channel: 'ADVERTISEMENT',
+            message: 'TRANSFER RECEIVED: 0.8 BTC waiting. Click CLAIM NOW and install our wallet helper to unlock the balance.',
+            choices: ['The ad has a balance amount', 'It tells you to click and install software to unlock unexpected funds', 'It uses capital letters', 'It mentions a wallet'],
+            answer: 1,
+            explanation: 'Unexpected balances and software-install prompts can lead to fake claim pages or malicious downloads. Close the ad and verify any real transaction using your own wallet app.'
+          },
+          {
+            channel: 'SMS',
+            message: 'Reply YES to opt in and release your pending crypto balance. Offer expires today. Link: bit.ly/claim-now',
+            choices: ['The text is short', 'It mentions an offer', 'Reply prompt, deadline, and shortened link for a fake balance', 'It includes the word crypto'],
+            answer: 2,
+            explanation: 'A reply-to-release prompt combined with a deadline and shortened link is a suspicious bulk-text pattern. Do not reply or open the link; check through the official app.'
+          }
+        ];
+
+        const NEGATIONS = ['never','do not','dont','won\'t','will not','should never','must never','avoid','refuse','no one should'];
+        const STAGE_ORDER = ['Hook', 'Trust', 'Pressure', 'Payment', 'Exit'];
+
+        const state = {
+          caseId: '',
+          sampleActive: 'guaranteed-profit',
+          filter: 'ALL',
+          lastResult: null,
+          challengeIndex: 0,
+          challengeScore: 0,
+          challengeAnswered: false,
+          challengeFinished: false,
+          guideIndex: 0
+        };
+
+        const elements = {
+          linkInput: document.getElementById('linkInput'),
+          messageInput: document.getElementById('messageInput'),
+          sourceChannel: document.getElementById('sourceChannel'),
+          charCounter: document.getElementById('charCounter'),
+          caseBadge: document.getElementById('caseBadge'),
+          sampleGrid: document.getElementById('sampleGrid'),
+          originalMessage: document.getElementById('originalMessage'),
+          highlightPanel: document.getElementById('highlightPanel'),
+          findingPanel: document.getElementById('findingPanel'),
+          rightPanel: document.getElementById('rightPanel'),
+          verdictLevel: document.getElementById('verdictLevel'),
+          verdictScore: document.getElementById('verdictScore'),
+          verdictMeter: document.getElementById('verdictMeter'),
+          stampLabel: document.getElementById('stampLabel'),
+          warningCount: document.getElementById('warningCount'),
+          sourceCount: document.getElementById('sourceCount'),
+          educationGrid: document.getElementById('educationGrid'),
+          challengeCount: document.getElementById('challengeCount'),
+          challengeProgress: document.querySelector('.challenge-progress'),
+          challengeProgressFill: document.getElementById('challengeProgressFill'),
+          challengeScenario: document.getElementById('challengeScenario'),
+          challengeChoices: document.getElementById('challengeChoices'),
+          challengeFeedback: document.getElementById('challengeFeedback'),
+          challengeScore: document.getElementById('challengeScore'),
+          challengeNextBtn: document.getElementById('challengeNextBtn'),
+          guideDialog: document.getElementById('guideDialog'),
+          guideStepLabel: document.getElementById('guideStepLabel'),
+          guideDescription: document.getElementById('guideDescription'),
+          guideVisual: document.getElementById('guideVisual'),
+          previousGuideBtn: document.getElementById('previousGuideBtn'),
+          nextGuideBtn: document.getElementById('nextGuideBtn'),
+          caseMeta: document.getElementById('caseMeta')
+        };
+
+        function setCaseId() {
+          state.caseId = 'BS-' + Math.random().toString(16).slice(2, 8).toUpperCase();
+          elements.caseBadge.textContent = 'CASE ' + state.caseId;
+        }
+
+        function updateCharCounter() {
+          const length = elements.messageInput.value.length;
+          elements.charCounter.textContent = length + ' / 5000';
+        }
+
+        function getEvidenceInput() {
+          const link = elements.linkInput.value.trim();
+          const message = elements.messageInput.value.trim();
+          if (link && message) return 'Link: ' + link + '\n\nMessage:\n' + message;
+          return link || message;
+        }
+
+        function resolveSourceChannel(text) {
+          const profiles = {
+            email: {
+              label: 'Spam email / exchange notice',
+              detail: 'Bulk emails can impersonate exchanges, wallet providers, and retailers.',
+              action: 'Check the sender domain independently; do not open unexpected attachments or sign-in links.'
+            },
+            social: {
+              label: 'Social media post / message',
+              detail: 'Giveaways and investment promotions may collect contact details before moving the conversation off-platform.',
+              action: 'Verify the account through its official site and do not share contact, login, or wallet secrets.'
+            },
+            ad: {
+              label: 'Pop-up / banner / text ad',
+              detail: 'Malicious ads can lead to fake transfer notifications or pages showing a fabricated balance.',
+              action: 'Close the ad; do not click claim or release buttons, download tools, or pay to unlock a displayed balance.'
+            },
+            sms: {
+              label: 'SMS / text message',
+              detail: 'Bulk texts often use urgency, short links, and reply prompts to draw people into a fake balance flow.',
+              action: 'Do not reply or follow the link. Check any account notice using the official app or website.'
+            },
+            web: {
+              label: 'Link / other source',
+              detail: 'A link alone does not identify where the message originated.',
+              action: 'Do not open it to investigate; navigate to the service through its official app or a saved address.'
+            },
+            unknown: {
+              label: 'Source not identified',
+              detail: 'There were not enough local clues to infer an email, social, ad, or SMS source.',
+              action: 'Choose the closest source above for tailored guidance, or verify the sender through an independent official channel.'
+            }
+          };
+          let key = elements.sourceChannel.value;
+          if (key === 'auto') {
+            const cues = [
+              ['sms', /\b(?:sms|text message|reply stop|short code|blast text|text us|opt[- ]?in)\b/i],
+              ['ad', /\b(?:pop.?up|banner ad|advertisement|sponsored post|ad network|transfer notification|fake balance|claim page)\b/i],
+              ['social', /\b(?:instagram|facebook|tiktok|social media|direct message|dm|follow us|like and share|off[- ]platform)\b/i],
+              ['email', /\b(?:email|subject:|from:|unsubscribe|exchange notice|wallet provider|retailer notification)\b/i]
+            ];
+            const found = cues.find(function (cue) { return cue[1].test(text); });
+            key = found ? found[0] : (/https?:\/\/|www\./i.test(text) ? 'web' : 'unknown');
+          }
+          return profiles[key] || profiles.unknown;
+        }
+
+        function getNormalizedText(rawText) {
+          const text = String(rawText || '').replace(/\r\n?/g, '\n').slice(0, 5000);
+          return text;
+        }
+
+        function isNegated(text, index) {
+          const before = text.slice(Math.max(0, index - 45), index).toLowerCase();
+          return NEGATIONS.some(function (phrase) {
+            return new RegExp(phrase, 'i').test(before);
+          });
+        }
+
+        function severityFromWeight(weight) {
+          if (weight >= 30) return 'CRITICAL';
+          if (weight >= 18) return 'HIGH';
+          if (weight >= 10) return 'MEDIUM';
+          return 'LOW';
+        }
+
+        function computeRuleMatches(text) {
+          const cleaned = text.toLowerCase();
+          const matches = [];
+          const familyTotals = {};
+          const seen = new Set();
+
+          RULES.forEach(function (rule) {
+            const regex = new RegExp(rule.regex.source, 'gi');
+            let match;
+            let count = 0;
+            while ((match = regex.exec(cleaned)) && count < 6) {
+              const start = match.index;
+              const matchedText = match[0];
+              if (isNegated(cleaned, start)) continue;
+
+              const dedupeKey = rule.id + ':' + start + ':' + matchedText;
+              if (seen.has(dedupeKey)) continue;
+              seen.add(dedupeKey);
+
+              matches.push({
+                ruleId: rule.id,
+                ruleLabel: rule.label,
+                severity: severityFromWeight(rule.weight),
+                weight: rule.weight,
+                matchText: matchedText,
+                start: start,
+                end: start + matchedText.length,
+                family: rule.family,
+                stage: rule.stage
+              });
+
+              familyTotals[rule.family] = (familyTotals[rule.family] || 0) + rule.weight;
+              count += 1;
+            }
+          });
+
+          return { matches: matches, familyTotals: familyTotals };
+        }
+
+        function computeInspectorSignals(text) {
+          const lower = text.toLowerCase();
+          const signals = [];
+          let total = 0;
+
+          if (/(https?:\/\/|www\.|[a-z0-9-]+\.[a-z]{2,})/i.test(lower)) {
+            const domains = lower.match(/(?:https?:\/\/)?(?:www\.)?([a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\.[a-z]{2,})?)/gi) || [];
+            const sample = domains[0] || 'unknown domain';
+            signals.push({ type: 'LINK FORENSICS', detail: 'Domain pattern detected: ' + sample });
+            total += 8;
+          }
+
+          if (/(?:^|\D)(?:1[a-z0-9]{25,34}|3[a-z0-9]{25,34}|bc1[a-z0-9]{10,60})(?:$|\D)/i.test(lower)) {
+            signals.push({ type: 'BTC ADDRESS', detail: 'Bitcoin wallet address pattern discovered.' });
+            total += 7;
+          }
+
+          if (/(telegram|whatsapp|@\w+|\+?\d{10,15}|[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})/i.test(lower)) {
+            signals.push({ type: 'CONTACT CHANNEL', detail: 'Private contact request or direct channel detected.' });
+            total += 7;
+          }
+
+          const caps = (text.match(/[A-Z]{3,}/g) || []).length;
+          const exclamations = (text.match(/!/g) || []).length;
+          if (caps > 0 || exclamations > 0) {
+            signals.push({ type: 'TONE SIGNAL', detail: 'Urgent or highly pressured tone detected.' });
+            total += Math.min(12, caps * 2 + exclamations * 2);
+          }
+
+          return { signals: signals, total: Math.min(30, total) };
+        }
+
+        function scoreLevel(score) {
+          if (score >= 72) return 'CRITICAL';
+          if (score >= 48) return 'HIGH';
+          if (score >= 25) return 'MEDIUM';
+          return 'LOW';
+        }
+
+        function determinePrimaryClassification(matches) {
+          const totals = {};
+          matches.forEach(function (match) {
+            totals[match.family] = (totals[match.family] || 0) + match.weight;
+          });
+          const sorted = Object.keys(totals).sort(function (a, b) { return totals[b] - totals[a]; });
+          return sorted[0] || 'Pressure';
+        }
+
+        function computeCorrelationSignals(matches, familyTotals) {
+          let boost = 0;
+          const stageTotals = {};
+          matches.forEach(function (match) {
+            stageTotals[match.stage] = (stageTotals[match.stage] || 0) + match.weight;
+          });
+
+          if (stageTotals.Pressure && stageTotals.Payment && stageTotals.Credential) boost += 18;
+          if (stageTotals.Trust && stageTotals.Pressure && stageTotals.Payment) boost += 12;
+          if (familyTotals['Payment'] && familyTotals['Credential Theft']) boost += 8;
+          if (familyTotals['Impersonation'] && familyTotals['Pressure']) boost += 6;
+
+          return boost;
+        }
+
+        function buildVerdict(score) {
+          if (score >= 72) return { label: 'CRITICAL', fill: 'var(--critical)', accent: 'var(--critical)' };
+          if (score >= 48) return { label: 'HIGH', fill: 'var(--high)', accent: 'var(--high)' };
+          if (score >= 25) return { label: 'MEDIUM', fill: 'var(--medium)', accent: 'var(--medium)' };
+          return { label: 'LOW', fill: 'var(--low)', accent: 'var(--low)' };
+        }
+
+        function computeBreakdown(matches) {
+          const totals = {};
+          matches.forEach(function (match) {
+            totals[match.family] = (totals[match.family] || 0) + match.weight;
+          });
+
+          const total = Object.values(totals).reduce(function (sum, value) { return sum + value; }, 0) || 1;
+          const rows = Object.keys(totals).map(function (family) {
+            const value = totals[family];
+            return {
+              label: family.toUpperCase(),
+              value: value,
+              percent: Math.max(8, Math.round((value / total) * 100)),
+              color: family === 'Payment' ? 'var(--high)' : family === 'Credential Theft' ? 'var(--critical)' : family === 'Pressure' ? 'var(--medium)' : family === 'Impersonation' ? 'var(--low)' : 'var(--ink)'
+            };
+          }).sort(function (a, b) { return b.value - a.value; }).slice(0,5);
+
+          return rows;
+        }
+
+        function getEvidenceGraph(matches) {
+          const graph = [];
+          const tiers = { Payment: 'Payment', 'Credential Theft': 'Trust', Pressure: 'Pressure', Impersonation: 'Trust' };
+          const seen = new Set();
+          matches.forEach(function (match) {
+            const bucket = tiers[match.family] || 'Trust';
+            if (!seen.has(bucket)) {
+              graph.push({ label: bucket, value: bucket });
+              seen.add(bucket);
+            }
+          });
+          if (!graph.length) {
+            graph.push({ label: 'General', value: 'No suspicious pattern' });
+          }
+          return graph;
+        }
+
+        function computeCompoundReturn() {
+          const returnRate = (Math.pow(1.08, 365) - 1) * 100;
+          return '8% daily / ' + returnRate.toFixed(0) + '% combined return';
+        }
+
+        function generateSummary(matches, primaryClassification) {
+          if (!matches.length) {
+            return 'No significant warning pattern was detected. This does not prove the message is legitimate.';
+          }
+          const top = matches.slice().sort(function (a, b) { return b.weight - a.weight; }).slice(0, 3);
+          return 'The message combines ' + top.map(function (match) { return match.ruleLabel.toLowerCase(); }).join(', ') + '. This pattern commonly appears in ' + primaryClassification.toLowerCase() + ' scam behavior.';
+        }
+
+        function analyzeText(rawText, sourceChannel) {
+          const messageText = getNormalizedText(rawText).slice(0, 5000);
+          const ruleData = computeRuleMatches(messageText);
+          const inspectorData = computeInspectorSignals(messageText);
+          const matches = ruleData.matches;
+          const correlation = computeCorrelationSignals(matches, ruleData.familyTotals);
+          const baseWeight = matches.reduce(function (sum, match) { return sum + match.weight; }, 0);
+          const urgencyBonus = matches.some(function (m) { return m.stage === 'Pressure'; }) && matches.some(function (m) { return m.stage === 'Payment'; }) ? 12 : 0;
+          const finalSum = baseWeight + inspectorData.total + correlation + urgencyBonus;
+          const score = Math.min(100, Math.round(100 * (1 - Math.exp(-finalSum / 45))));
+          const level = scoreLevel(score);
+          const verdict = buildVerdict(score);
+          const primaryClassification = determinePrimaryClassification(matches);
+          const summary = generateSummary(matches, primaryClassification);
+          const breakdown = computeBreakdown(matches);
+          const evidenceGraph = getEvidenceGraph(matches);
+          const ruleCoverage = Math.min(20, new Set(matches.map(function (m) { return m.ruleId; })).size);
+          const stageCounts = {
+            Hook: matches.some(function (m) { return m.stage === 'Trust'; }) ? 1 : 0,
+            Trust: matches.some(function (m) { return m.stage === 'Trust'; }) ? 1 : 0,
+            Pressure: matches.some(function (m) { return m.stage === 'Pressure'; }) ? 1 : 0,
+            Payment: matches.some(function (m) { return m.stage === 'Payment'; }) ? 1 : 0,
+            Exit: matches.some(function (m) { return m.family === 'Payment'; }) ? 1 : 0
+          };
+
+          const stages = STAGE_ORDER.map(function (name) {
+            return { name: name, count: stageCounts[name] || 0, active: (stageCounts[name] || 0) > 0 };
+          });
+
+          return {
+            messageText: messageText,
+            matches: matches,
+            score: score,
+            level: level,
+            verdict: verdict,
+            sum: finalSum,
+            ruleCoverage: ruleCoverage,
+            evidenceCount: matches.length,
+            sourceCount: inspectorData.signals.length,
+            sourceChannel: sourceChannel || resolveSourceChannel(messageText),
+            primaryClassification: primaryClassification,
+            summary: summary,
+            breakdown: breakdown,
+            evidenceGraph: evidenceGraph,
+            stages: stages,
+            activeStages: stages.filter(function (item) { return item.active; }).length,
+            bonus: urgencyBonus,
+            inspectorSignals: inspectorData.signals,
+            inspectorTotal: inspectorData.total,
+            correlation: correlation,
+            compoundText: computeCompoundReturn(),
+            riskDescription: (matches.length > 0 ? 'High-risk pattern observed' : 'No significant pattern observed')
+          };
+        }
+
+        function renderSampleCards() {
+          elements.sampleGrid.replaceChildren();
+          SAMPLE_LIBRARY.forEach(function (sample) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'sample-card';
+            if (sample.id === state.sampleActive) button.classList.add('active');
+
+            const small = document.createElement('small'); small.textContent = sample.category;
+            const title = document.createElement('strong'); title.textContent = sample.label;
+            const meta = document.createElement('div'); meta.className = 'sample-meta';
+            const difficulty = document.createElement('span'); difficulty.className = 'pill'; difficulty.textContent = sample.difficulty;
+            const risk = document.createElement('span'); risk.className = 'pill'; risk.textContent = sample.risk;
+            meta.appendChild(difficulty); meta.appendChild(risk);
+            const desc = document.createElement('div'); desc.style.marginTop = '0.4rem'; desc.style.color = 'var(--muted)'; desc.style.fontSize = '0.8rem'; desc.textContent = sample.description;
+
+            button.appendChild(small); button.appendChild(title); button.appendChild(meta); button.appendChild(desc);
+            button.addEventListener('click', function () {
+              loadSampleById(sample.id);
+            });
+            elements.sampleGrid.appendChild(button);
+          });
+        }
+
+        function createMeter(level, score) {
+          const colors = {
+            CRITICAL: 'var(--critical)',
+            HIGH: 'var(--high)',
+            MEDIUM: 'var(--medium)',
+            LOW: 'var(--low)'
+          };
+          elements.verdictMeter.replaceChildren();
+          for (let i = 0; i < 10; i += 1) {
+            const block = document.createElement('span');
+            block.className = 'meter-block';
+            if (i < Math.ceil(score / 10)) {
+              block.classList.add('active');
+              block.style.background = colors[level];
+            }
+            elements.verdictMeter.appendChild(block);
+          }
+        }
+
+        function renderHighlights(result) {
+          const wrapper = elements.highlightPanel;
+          wrapper.replaceChildren();
+
+          if (!result.messageText || !result.matches.length) {
+            wrapper.textContent = 'No warning pattern found in the message.';
+            return;
+          }
+
+          const ordered = result.matches.slice().sort(function (a, b) { return a.start - b.start; });
+          let cursor = 0;
+          ordered.forEach(function (match, index) {
+            const before = result.messageText.slice(cursor, match.start);
+            if (before) wrapper.appendChild(document.createTextNode(before));
+
+            const chip = document.createElement('span');
+            chip.className = 'evidence-highlight';
+            chip.setAttribute('tabindex', '0');
+            chip.setAttribute('role', 'button');
+            chip.title = '[' + String(index + 1).padStart(2, '0') + '] ' + match.ruleLabel + ' • ' + match.severity;
+            chip.textContent = result.messageText.slice(match.start, match.end);
+            chip.addEventListener('click', function () {
+              const item = document.querySelector('[data-rule-id="' + match.ruleId + '"]');
+              if (item) item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+            wrapper.appendChild(chip);
+            cursor = match.end;
+          });
+
+          const tail = result.messageText.slice(cursor);
+          if (tail) wrapper.appendChild(document.createTextNode(tail));
+        }
+
+        function renderFindings(result) {
+          elements.findingPanel.replaceChildren();
+          if (!result.matches.length) {
+            const empty = document.createElement('div');
+            empty.className = 'info-box';
+            empty.textContent = 'No significant warning pattern was detected. This does not prove the message is legitimate.';
+            elements.findingPanel.appendChild(empty);
+            return;
+          }
+
+          const ordered = result.matches.slice().sort(function (a, b) { return b.weight - a.weight; });
+          ordered.forEach(function (match, index) {
+            const item = document.createElement('div');
+            item.className = 'finding-item';
+            item.setAttribute('tabindex', '0');
+            item.setAttribute('data-rule-id', String(match.ruleId));
+
+            const head = document.createElement('div');
+            head.className = 'finding-head';
+            const label = document.createElement('span');
+            label.textContent = 'E-' + String(index + 1).padStart(2, '0');
+            const severity = document.createElement('span');
+            severity.className = 'severity-tag severity-' + match.severity.toLowerCase();
+            severity.textContent = match.severity;
+            head.appendChild(label); head.appendChild(severity);
+
+            const title = document.createElement('h5'); title.textContent = match.ruleLabel;
+            const detail = document.createElement('p'); detail.textContent = 'Evidence: "' + match.matchText + '"';
+            const why = document.createElement('p'); why.textContent = 'Why it matters: this signal commonly appears in scam delivery patterns and loss-of-trust flows.';
+
+            item.appendChild(head); item.appendChild(title); item.appendChild(detail); item.appendChild(why);
+            elements.findingPanel.appendChild(item);
+          });
+        }
+
+        function renderRightPanel(result) {
+          const panel = elements.rightPanel;
+          panel.replaceChildren();
+
+          const summaryCard = document.createElement('div');
+          summaryCard.className = 'section-card';
+          const summaryTitle = document.createElement('h4'); summaryTitle.textContent = 'Summary';
+          const summaryBody = document.createElement('div'); summaryBody.className = 'info-box'; summaryBody.textContent = result.summary;
+          summaryCard.appendChild(summaryTitle); summaryCard.appendChild(summaryBody); panel.appendChild(summaryCard);
+
+          const channelCard = document.createElement('div');
+          channelCard.className = 'section-card';
+          const channelTitle = document.createElement('h4'); channelTitle.textContent = 'Source context · ' + result.sourceChannel.label;
+          const channelBody = document.createElement('p'); channelBody.textContent = result.sourceChannel.detail;
+          const channelAction = document.createElement('p'); channelAction.textContent = 'Recommended: ' + result.sourceChannel.action;
+          channelCard.appendChild(channelTitle); channelCard.appendChild(channelBody); channelCard.appendChild(channelAction);
+          panel.appendChild(channelCard);
+
+          const calcCard = document.createElement('div');
+          calcCard.className = 'section-card';
+          const calcTitle = document.createElement('h4'); calcTitle.textContent = 'Why this score?';
+          const calcList = document.createElement('ul'); calcList.className = 'calc-list';
+          const contributionRows = [
+            { label: 'Core rule weights', value: result.matches.reduce(function (sum, item) { return sum + item.weight; }, 0) },
+            { label: 'Inspector signals', value: result.inspectorTotal },
+            { label: 'Behavioral correlation', value: result.correlation },
+            { label: 'Urgency/payment bonus', value: result.bonus }
+          ];
+
+          contributionRows.forEach(function (row) {
+            const li = document.createElement('li');
+            const left = document.createElement('span'); left.textContent = row.label;
+            const right = document.createElement('strong'); right.textContent = '+' + row.value;
+            li.appendChild(left); li.appendChild(right); calcList.appendChild(li);
+          });
+
+          const total = document.createElement('li');
+          const totalLeft = document.createElement('span'); totalLeft.textContent = 'TOTAL';
+          const totalRight = document.createElement('strong'); totalRight.className = 'calc-total'; totalRight.textContent = String(result.sum);
+          total.appendChild(totalLeft); total.appendChild(totalRight); calcList.appendChild(total);
+          calcCard.appendChild(calcTitle); calcCard.appendChild(calcList);
+          panel.appendChild(calcCard);
+
+          const breakCard = document.createElement('div');
+          breakCard.className = 'section-card';
+          const breakTitle = document.createElement('h4'); breakTitle.textContent = 'Signal contribution';
+          const breakdown = document.createElement('div'); breakdown.className = 'breakdown';
+
+          result.breakdown.forEach(function (item) {
+            const row = document.createElement('div'); row.className = 'break-row';
+            const label = document.createElement('div'); label.className = 'label'; label.textContent = item.label;
+            const shell = document.createElement('div'); shell.className = 'bar-shell';
+            const fill = document.createElement('span'); fill.className = 'bar-fill'; fill.style.width = item.percent + '%'; fill.style.background = item.color; shell.appendChild(fill);
+            const value = document.createElement('strong'); value.textContent = String(item.value);
+            row.appendChild(label); row.appendChild(shell); row.appendChild(value);
+            breakdown.appendChild(row);
+          });
+          breakCard.appendChild(breakTitle); breakCard.appendChild(breakdown); panel.appendChild(breakCard);
+
+          const graphCard = document.createElement('div');
+          graphCard.className = 'section-card';
+          const graphTitle = document.createElement('h4'); graphTitle.textContent = 'Evidence flow';
+          const graph = document.createElement('div'); graph.className = 'graph';
+          result.evidenceGraph.forEach(function (node) {
+            const n = document.createElement('div'); n.className = 'graph-node'; n.textContent = node.label;
+            graph.appendChild(n);
+          });
+          graphCard.appendChild(graphTitle); graphCard.appendChild(graph); panel.appendChild(graphCard);
+
+          const riskCard = document.createElement('div');
+          riskCard.className = 'section-card';
+          const riskTitle = document.createElement('h4'); riskTitle.textContent = 'Risk classification';
+          const riskGrid = document.createElement('div'); riskGrid.className = 'risk-grid';
+          const primary = document.createElement('div'); primary.className = 'mini-card';
+          const primeTitle = document.createElement('strong'); primeTitle.textContent = result.primaryClassification;
+          const primeLabel = document.createElement('span'); primeLabel.textContent = 'Primary type';
+          primary.appendChild(primeTitle); primary.appendChild(primeLabel);
+          const scoreBox = document.createElement('div'); scoreBox.className = 'mini-card';
+          const scoreTitle = document.createElement('strong'); scoreTitle.textContent = result.score + ' / 100';
+          const scoreLabel = document.createElement('span'); scoreLabel.textContent = 'Current score';
+          scoreBox.appendChild(scoreTitle); scoreBox.appendChild(scoreLabel);
+          riskGrid.appendChild(primary); riskGrid.appendChild(scoreBox); riskCard.appendChild(riskTitle); riskCard.appendChild(riskGrid); panel.appendChild(riskCard);
+
+          const flowCard = document.createElement('div');
+          flowCard.className = 'section-card';
+          const flowTitle = document.createElement('h4'); flowTitle.textContent = 'Attack flow map';
+          const flowList = document.createElement('ul'); flowList.className = 'stack-list';
+          result.stages.forEach(function (stage) {
+            const li = document.createElement('li');
+            const left = document.createElement('span'); left.textContent = stage.name;
+            const right = document.createElement('strong'); right.textContent = stage.active ? 'active' : 'idle';
+            li.appendChild(left); li.appendChild(right); flowList.appendChild(li);
+          });
+          flowCard.appendChild(flowTitle); flowCard.appendChild(flowList); panel.appendChild(flowCard);
+
+          const actionCard = document.createElement('div');
+          actionCard.className = 'section-card';
+          const actionTitle = document.createElement('h4'); actionTitle.textContent = 'What to do now';
+          const list = document.createElement('ul'); list.className = 'status-list';
+          ['Do not send Bitcoin.', 'Do not share seed phrases.', 'Do not pay withdrawal fees.', 'Verify via official channels only.', 'Pause and check independently.'].forEach(function (line) {
+            const li = document.createElement('li');
+            const left = document.createElement('span'); left.textContent = line;
+            const dot = document.createElement('span'); dot.className = 'status-dot';
+            li.appendChild(left); li.appendChild(dot); list.appendChild(li);
+          });
+          actionCard.appendChild(actionTitle); actionCard.appendChild(list); panel.appendChild(actionCard);
+        }
+
+        function renderVerdict(result) {
+          const fill = result.verdict.fill;
+          elements.verdictLevel.textContent = result.level;
+          elements.verdictLevel.style.color = fill;
+          elements.verdictScore.textContent = result.score + ' / 100';
+          elements.warningCount.textContent = String(result.matches.length || 0);
+          elements.sourceCount.textContent = String(result.sourceCount || result.inspectorSignals.length || 0);
+          elements.stampLabel.textContent = result.level;
+          elements.stampLabel.style.color = fill;
+          elements.stampLabel.style.borderColor = fill;
+          createMeter(result.level, result.score);
+        }
+
+        function renderEducation() {
+          const cards = [
+            {
+              title: 'Giveaway scam',
+              what: 'A fake prize is promised after a small payment.',
+              why: 'It triggers excitement and guesswork before the victim pays.',
+              do: 'Ignore pressure, do not send funds, and verify claims.'
+            },
+            {
+              title: 'Investment scam',
+              what: 'It promises exceptional returns and impossible gains.',
+              why: 'Greed and urgency override calm decision making.',
+              do: 'Look for regulated disclosures and independent review.'
+            },
+            {
+              title: 'Support impersonation',
+              what: 'It imitates a support team or official wallet service.',
+              why: 'The attacker hides behind a trusted name.',
+              do: 'Use official contact paths and never share recovery data.'
+            },
+            {
+              title: 'Credential theft',
+              what: 'The message asks for a secret phrase, password, or OTP.',
+              why: 'That gives the attacker direct account access.',
+              do: 'Never share recovery data or login codes.'
+            },
+            {
+              title: 'Advance fee scam',
+              what: 'The victim is asked to pay a fee before funds are released.',
+              why: 'The fee is a trap that prevents recovery.',
+              do: 'Do not pay upfront to unlock a claim.'
+            },
+            {
+              title: 'Recovery scam',
+              what: 'A stranger promises to recover crypto for a fee.',
+              why: 'Panic is weaponized to create urgency and compliance.',
+              do: 'Do not pay recovery fees to untrusted contacts.'
+            },
+            {
+              title: 'Remote access scam',
+              what: 'It requests screen-sharing software or remote control.',
+              why: 'The attacker gains access to the device and funds.',
+              do: 'Decline and verify via official support channels.'
+            },
+            {
+              title: 'Urgency trap',
+              what: 'The message tells you to act immediately before a deadline.',
+              why: 'Rush decisions reduce critical thinking.',
+              do: 'Pause, verify, and analyze before any action.'
+            }
+          ];
+
+          elements.educationGrid.replaceChildren();
+          cards.forEach(function (card) {
+            const item = document.createElement('div'); item.className = 'edu-card';
+            const title = document.createElement('h5'); title.textContent = card.title;
+            const what = document.createElement('p'); what.textContent = 'What it looks like: ' + card.what;
+            const why = document.createElement('p'); why.textContent = 'Why it works: ' + card.why;
+            const doIt = document.createElement('p'); doIt.textContent = 'What to do: ' + card.do;
+            item.appendChild(title); item.appendChild(what); item.appendChild(why); item.appendChild(doIt);
+            elements.educationGrid.appendChild(item);
+          });
+        }
+
+        function updateChallengeProgress() {
+          const progress = state.challengeFinished ? CHALLENGE_CASES.length : state.challengeIndex;
+          elements.challengeProgress.setAttribute('aria-valuenow', String(progress));
+          elements.challengeProgressFill.style.width = (progress / CHALLENGE_CASES.length * 100) + '%';
+          elements.challengeScore.textContent = 'Score: ' + state.challengeScore + ' / ' + CHALLENGE_CASES.length;
+        }
+
+        function renderChallenge() {
+          elements.challengeChoices.replaceChildren();
+          elements.challengeFeedback.textContent = 'Choose the strongest warning sign in the message.';
+          elements.challengeFeedback.removeAttribute('data-result');
+          elements.challengeNextBtn.disabled = true;
+
+          if (state.challengeFinished) {
+            elements.challengeCount.textContent = 'Challenge complete';
+            elements.challengeScenario.textContent = 'You scored ' + state.challengeScore + ' out of ' + CHALLENGE_CASES.length + '. A pause and an independent check are useful defenses against every channel.';
+            elements.challengeFeedback.textContent = state.challengeScore === CHALLENGE_CASES.length
+              ? 'Excellent work — you spotted every key warning sign.'
+              : 'Review the explanations, then try again to practice spotting the clues.';
+            elements.challengeNextBtn.textContent = 'Play again';
+            elements.challengeNextBtn.disabled = false;
+            updateChallengeProgress();
+            return;
+          }
+
+          const currentCase = CHALLENGE_CASES[state.challengeIndex];
+          elements.challengeCount.textContent = currentCase.channel + ' · ROUND ' + (state.challengeIndex + 1) + ' / ' + CHALLENGE_CASES.length;
+          elements.challengeScenario.textContent = currentCase.message;
+          currentCase.choices.forEach(function (choice, index) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'challenge-choice';
+            button.textContent = choice;
+            button.addEventListener('click', function () {
+              if (state.challengeAnswered) return;
+              state.challengeAnswered = true;
+              const isCorrect = index === currentCase.answer;
+              if (isCorrect) state.challengeScore += 1;
+              elements.challengeChoices.querySelectorAll('.challenge-choice').forEach(function (option, optionIndex) {
+                option.disabled = true;
+                if (optionIndex === currentCase.answer) option.classList.add('correct');
+                else if (optionIndex === index) option.classList.add('incorrect');
+              });
+              elements.challengeFeedback.textContent = (isCorrect ? 'Correct. ' : 'Not quite. ') + currentCase.explanation;
+              elements.challengeFeedback.dataset.result = isCorrect ? 'correct' : 'incorrect';
+              elements.challengeNextBtn.disabled = false;
+              updateChallengeProgress();
+            });
+            elements.challengeChoices.appendChild(button);
+          });
+          elements.challengeNextBtn.textContent = state.challengeIndex === CHALLENGE_CASES.length - 1 ? 'See results' : 'Next scenario';
+          updateChallengeProgress();
+        }
+
+        function advanceChallenge() {
+          if (state.challengeFinished) {
+            state.challengeIndex = 0;
+            state.challengeScore = 0;
+            state.challengeAnswered = false;
+            state.challengeFinished = false;
+          } else if (state.challengeIndex === CHALLENGE_CASES.length - 1) {
+            state.challengeFinished = true;
+          } else {
+            state.challengeIndex += 1;
+            state.challengeAnswered = false;
+          }
+          renderChallenge();
+        }
+
+        function renderGuideStep() {
+          const step = GUIDE_STEPS[state.guideIndex];
+          elements.guideStepLabel.textContent = 'STEP ' + (state.guideIndex + 1) + ' OF ' + GUIDE_STEPS.length + ' · ' + step.title.toUpperCase();
+          elements.guideDescription.textContent = step.description;
+          elements.guideVisual.dataset.step = String(state.guideIndex);
+          elements.previousGuideBtn.disabled = state.guideIndex === 0;
+          elements.nextGuideBtn.textContent = state.guideIndex === GUIDE_STEPS.length - 1 ? 'Done' : 'Next';
+        }
+
+        function openGuide() {
+          state.guideIndex = 0;
+          renderGuideStep();
+          if (!elements.guideDialog.open) elements.guideDialog.showModal();
+        }
+
+        function advanceGuide() {
+          if (state.guideIndex >= GUIDE_STEPS.length - 1) {
+            elements.guideDialog.close();
+            return;
+          }
+          state.guideIndex += 1;
+          renderGuideStep();
+        }
+
+        function getHistory() {
+          try {
+            return JSON.parse(localStorage.getItem('bitshield_history') || '[]');
+          } catch (error) {
+            return [];
+          }
+        }
+
+        function saveHistory(record) {
+          try {
+            const history = getHistory();
+            history.unshift(record);
+            localStorage.setItem('bitshield_history', JSON.stringify(history.slice(0, 6)));
+          } catch (error) {
+            // Ignore local storage failures gracefully.
+          }
+        }
+
+        function runAnalysis() {
+          const evidence = getEvidenceInput();
+          const result = analyzeText(evidence, resolveSourceChannel(evidence));
+          state.lastResult = result;
+
+          elements.originalMessage.textContent = result.messageText || 'No message analyzed yet.';
+          renderHighlights(result);
+          renderFindings(result);
+          renderVerdict(result);
+          renderRightPanel(result);
+
+          const record = {
+            caseId: state.caseId,
+            timestamp: new Date().toISOString(),
+            score: result.score,
+            level: result.level,
+            preview: result.messageText.slice(0, 90)
+          };
+          saveHistory(record);
+
+          const summaryText = 'Case ID: ' + state.caseId + ' | Timestamp: ' + new Date(record.timestamp).toLocaleString() + ' | Score: ' + result.score + ' / 100 | Level: ' + result.level + ' | Matches: ' + result.matches.length;
+          elements.caseMeta.textContent = summaryText;
+        }
+
+        function copySummary() {
+          const result = state.lastResult || analyzeText(getEvidenceInput());
+          const summary = [
+            'BITSHIELD ANALYSIS',
+            'Case ID: ' + state.caseId,
+            'Risk: ' + result.level,
+            'Score: ' + result.score + '/100',
+            'Signals: ' + result.matches.length,
+            'Summary: ' + result.summary,
+            'Recommended action: do not send Bitcoin or share any recovery data.'
+          ].join('\n');
+
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(summary).catch(function () {
+              alert(summary);
+            });
+          } else {
+            alert(summary);
+          }
+        }
+
+        function loadSampleById(sampleId) {
+          const sample = SAMPLE_LIBRARY.find(function (item) { return item.id === sampleId; }) || SAMPLE_LIBRARY[0];
+          state.sampleActive = sample.id;
+          elements.linkInput.value = '';
+          elements.messageInput.value = sample.value;
+          updateCharCounter();
+          renderSampleCards();
+          setVisibleSection('analyze', false);
+          runAnalysis();
+          elements.messageInput.focus();
+        }
+
+        function bindEvents() {
+          function handleEvidenceInput() {
+            updateCharCounter();
+            if (document.getElementById('liveToggle').checked) {
+              window.clearTimeout(window.bitshieldTimer);
+              window.bitshieldTimer = window.setTimeout(runAnalysis, 250);
+            }
+          }
+          elements.messageInput.addEventListener('input', handleEvidenceInput);
+          elements.linkInput.addEventListener('input', handleEvidenceInput);
+          elements.sourceChannel.addEventListener('change', runAnalysis);
+
+          document.getElementById('analyzeBtn').addEventListener('click', runAnalysis);
+
+          document.getElementById('clearBtn').addEventListener('click', function () {
+            elements.linkInput.value = '';
+            elements.messageInput.value = '';
+            elements.sourceChannel.value = 'auto';
+            state.sampleActive = '';
+            updateCharCounter();
+            renderSampleCards();
+            runAnalysis();
+          });
+
+          document.getElementById('sampleBtn').addEventListener('click', function () {
+            loadSampleById(state.sampleActive || SAMPLE_LIBRARY[0].id);
+          });
+
+          document.getElementById('loadDefaultSample').addEventListener('click', function () {
+            loadSampleById(state.sampleActive || SAMPLE_LIBRARY[0].id);
+          });
+
+          document.getElementById('focusInvestigation').addEventListener('click', function () {
+            setVisibleSection('analyze', false);
+            elements.messageInput.focus();
+            elements.messageInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          });
+
+          document.getElementById('copySummaryBtn').addEventListener('click', copySummary);
+          document.getElementById('printReportBtn').addEventListener('click', function () { window.print(); });
+
+          document.getElementById('clearHistoryBtn').addEventListener('click', function () {
+            try { localStorage.removeItem('bitshield_history'); } catch (error) {}
+            elements.caseMeta.textContent = 'Local history cleared.';
+          });
+
+          document.getElementById('newCaseBtn').addEventListener('click', function () {
+            setCaseId();
+            runAnalysis();
+          });
+
+          document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+          elements.challengeNextBtn.addEventListener('click', advanceChallenge);
+          document.getElementById('openGuideBtn').addEventListener('click', openGuide);
+          document.getElementById('closeGuideBtn').addEventListener('click', function () {
+            elements.guideDialog.close();
+          });
+          elements.previousGuideBtn.addEventListener('click', function () {
+            if (state.guideIndex > 0) {
+              state.guideIndex -= 1;
+              renderGuideStep();
+            }
+          });
+          elements.nextGuideBtn.addEventListener('click', advanceGuide);
+          document.getElementById('tryGuideSampleBtn').addEventListener('click', function () {
+            elements.guideDialog.close();
+            loadSampleById('fake-support');
+          });
+        }
+
+        function applyTheme(theme) {
+          const selectedTheme = theme === 'light' ? 'light' : 'dark';
+          document.documentElement.dataset.theme = selectedTheme;
+          const toggle = document.getElementById('themeToggle');
+          const nextTheme = selectedTheme === 'dark' ? 'light' : 'dark';
+          toggle.innerHTML = selectedTheme === 'dark'
+            ? '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.2 15.1A8.4 8.4 0 0 1 8.9 3.8 8.7 8.7 0 1 0 20.2 15.1Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+            : '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+          toggle.setAttribute('aria-label', 'Switch to ' + nextTheme + ' mode');
+          toggle.title = 'Switch to ' + nextTheme + ' mode';
+        }
+
+        function toggleTheme() {
+          const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+          applyTheme(nextTheme);
+          try {
+            localStorage.setItem('bitshield_theme', nextTheme);
+          } catch (error) {
+            // The selected theme remains active for this page even if storage is unavailable.
+          }
+        }
+
+        function initializeTheme() {
+          let savedTheme = 'dark';
+          try {
+            const storedTheme = localStorage.getItem('bitshield_theme');
+            if (storedTheme === 'light' || storedTheme === 'dark') savedTheme = storedTheme;
+          } catch (error) {
+            // Keep the default theme when storage is unavailable.
+          }
+          applyTheme(savedTheme);
+        }
+
+        function updateNetworkStatus() {
+          const online = typeof navigator !== 'undefined' ? navigator.onLine : true;
+          const chip = document.getElementById('networkStatus');
+          const label = document.getElementById('networkLabel');
+          if (!chip || !label) return;
+          chip.classList.toggle('online', online);
+          chip.classList.toggle('offline', !online);
+          label.textContent = online ? 'Online' : 'Offline';
+          chip.title = online ? 'Connected to the internet' : 'Offline mode active';
+        }
+
+        function setVisibleSection(sectionId, shouldScroll) {
+          const sections = document.querySelectorAll('.section-panel');
+          const visibleSectionId = sectionId === 'evidence' ? 'analyze' : sectionId;
+          document.body.dataset.view = sectionId;
+          let activeSection = null;
+          sections.forEach(function (section) {
+            const isVisible = section.dataset.section === visibleSectionId;
+            section.classList.toggle('is-hidden', !isVisible);
+            if (isVisible) activeSection = section;
+          });
+          document.querySelectorAll('.dashboard-card').forEach(function (card) {
+            card.setAttribute('aria-pressed', String(card.dataset.section === sectionId));
+          });
+          if (activeSection && shouldScroll !== false) {
+            requestAnimationFrame(function () {
+              document.querySelector('.dashboard-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+          }
+        }
+
+        function bindSectionNavigation() {
+          document.querySelectorAll('.dashboard-card').forEach(function (button) {
+            button.addEventListener('click', function () {
+              setVisibleSection(button.dataset.section);
+            });
+          });
+
+          const brandMark = document.querySelector('.brand-mark');
+          const brandTitle = document.querySelector('.brand-title');
+          if (brandMark) {
+            brandMark.addEventListener('click', function () { setVisibleSection('analyze'); });
+            brandMark.addEventListener('keydown', function (event) {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                setVisibleSection('analyze');
+              }
+            });
+          }
+          if (brandTitle) {
+            brandTitle.addEventListener('click', function () { setVisibleSection('analyze'); });
+            brandTitle.addEventListener('keydown', function (event) {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                setVisibleSection('analyze');
+              }
+            });
+          }
+        }
+
+        function init() {
+          setCaseId();
+          elements.messageInput.setAttribute('aria-describedby', 'charCounter');
+          initializeTheme();
+          elements.linkInput.value = '';
+          elements.messageInput.value = SAMPLE_LIBRARY[0].value;
+          updateCharCounter();
+          updateNetworkStatus();
+          setVisibleSection('analyze', false);
+          renderSampleCards();
+          renderEducation();
+          renderChallenge();
+          bindEvents();
+          bindSectionNavigation();
+          runAnalysis();
+          window.addEventListener('online', updateNetworkStatus);
+          window.addEventListener('offline', updateNetworkStatus);
+        }
+
+        init();
+      }());
+    </script>
+  </body>
+</html>
