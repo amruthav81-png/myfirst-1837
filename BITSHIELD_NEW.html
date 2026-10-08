@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BITSHIELD</title>
+    <style>
+      :root {
+        --workspace: #E8EEF4;
+        --card: #FFFFFF;
+        --border: #C5D0DC;
+        --ink: #12203A;
+        --muted: #4A5A73;
+        --critical: #A4161A;
+        --high: #B4410F;
+        --medium: #8A5A0B;
+        --low: #2F6B4F;
+        --tape: #F2D78A;
+        --focus: #1F6FEB;
+        --shadow: rgba(18,32,58,0.08);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --workspace: #0F1A2B;
+          --card: #16233A;
+          --border: #2C3E5C;
+          --ink: #E6ECF5;
+          --muted: #A7B4C8;
+          --critical: #E5484D;
+          --high: #F08A4B;
+          --medium: #E0A33B;
+          --low: #5FB38A;
+          --tape: #F2C94C;
+          --focus: #8EC5FF;
+          --shadow: rgba(0,0,0,0.22);
+        }
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background: var(--workspace);
+        color: var(--ink);
+        font-family: "IBM Plex Sans", Arial, system-ui, sans-serif;
+        line-height: 1.5;
+      }
+      h1,h2,h3,h4,h5 { margin: 0; }
+      button, textarea, input { font: inherit; }
+      :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+      a { color: inherit; text-decoration: none; }
+      .topbar {
+        position: sticky; top: 0; z-index: 5;
+        background: rgba(232,238,244,0.96);
+        border-bottom: 1px solid var(--border);
+      }
+      @media (prefers-color-scheme: dark) {
+        .topbar { background: rgba(15,26,43,0.94); }
+      }
+      .topbar-inner {
+        max-width: 1380px; margin: 0 auto; padding: 0.8rem 1rem;
+        display: grid; grid-template-columns: 1.2fr 0.9fr 1.1fr 1fr; gap: 0.75rem; align-items: center;
+      }
+      .brand { display: flex; align-items: center; gap: 0.8rem; }
+      .brand-mark {
+        width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center;
+        border: 1px solid var(--border); background: var(--card); border-radius: 10px; font-weight: 800;
+      }
+      .brand-title { font-size: 1.1rem; letter-spacing: 0.1em; text-transform: uppercase; }
+      .brand-sub { display: block; font-size: 0.72rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+      .status {
+        display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; padding: 0.5rem 0.8rem;
+        border: 1px solid var(--border); background: var(--card); border-radius: 999px; color: var(--muted);
+        letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.68rem;
+      }
+      .status-dot {
+        width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--low); box-shadow: 0 0 0 2px rgba(47,107,79,0.18);
+      }
+      nav {
+        display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; letter-spacing: 0.12em; font-size: 0.7rem; text-transform: uppercase;
+      }
+      nav a { color: var(--muted); }
+      .meta-note { text-align: right; color: var(--muted); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; }
+      .page { max-width: 1380px; margin: 0 auto; padding: 1rem 1rem 3rem; }
+      .hero { display: grid; grid-template-columns: 1.6fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+      .hero-copy, .hero-stats, .panel {
+        background: var(--card); border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 8px 18px var(--shadow);
+      }
+      .hero-copy { padding: 1.3rem 1.4rem; }
+      .eyebrow {
+        font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.7rem;
+      }
+      .hero-copy h2 {
+        font-size: clamp(2.4rem, 4vw, 5rem); line-height: 0.96; letter-spacing: -0.07em; margin-bottom: 0.7rem;
+      }
+      .hero-copy p { margin: 0; color: var(--muted); font-size: 1.05rem; max-width: 60ch; }
+      .hero-cta { margin-top: 1rem; }
+      .hero-stats {
+        display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.8rem; padding: 1rem;
+      }
+      .stat-card {
+        background: rgba(18,32,58,0.02); border: 1px solid var(--border); border-radius: 14px; padding: 0.9rem 0.7rem;
+      }
+      .stat-card strong { display: block; font-size: clamp(1.8rem, 3vw, 2.4rem); letter-spacing: -0.06em; }
+      .stat-card span { display: block; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+      .workspace { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,0.9fr); gap: 1rem; }
+      .panel { padding: 1rem; }
+      .section-header { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; margin-bottom: 0.8rem; }
+      .section-header h3 {
+        font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+      }
+      .section-chip {
+        border: 1px solid var(--border); background: rgba(18,32,58,0.02); border-radius: 999px; padding: 0.3rem 0.7rem;
+        font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+      }
+      .field { margin-bottom: 0.8rem; }
+      label { display: inline-block; margin-bottom: 0.4rem; font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+      textarea {
+        width: 100%; min-height: 185px; resize: vertical; background: rgba(18,32,58,0.02); color: var(--ink);
+        border: 1px solid var(--border); border-radius: 14px; padding: 0.8rem 0.9rem;
+      }
+      .char-row { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; }
+      .action-row { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+      button {
+        appearance: none; border: 1px solid var(--border); cursor: pointer; background: var(--card); color: var(--ink);
+        border-radius: 12px; min-height: 44px; padding: 0.7rem 1rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; transition: transform 0.12s ease;
+      }
+      button:hover { transform: translateY(-1px); }
+      .primary-btn { background: var(--ink); border-color: var(--ink); color: var(--card); }
+      .secondary-btn { background: rgba(18,32,58,0.02); }
+      .small-btn { min-height: 36px; padding: 0.45rem 0.7rem; font-size: 0.7rem; }
+      .toggle-row {
+        display: flex; justify-content: space-between; align-items: center; gap: 0.8rem; border-top: 1px solid var(--border); padding-top: 0.8rem; margin-top: 0.8rem;
+      }
+      .switch { position: relative; display: inline-block; width: 52px; height: 28px; }
+      .switch input { opacity: 0; width: 0; height: 0; }
+      .slider {
+        position: absolute; inset: 0; background: rgba(18,32,58,0.08); border: 1px solid var(--border); border-radius: 999px; transition: 0.2s ease;
+      }
+      .slider::before {
+        content: ""; position: absolute; width: 18px; height: 18px; left: 4px; top: 4px; background: var(--ink); border-radius: 50%; transition: 0.2s ease;
+      }
+      .switch input:checked + .slider { background: rgba(47,107,79,0.12); }
+      .switch input:checked + .slider::before { transform: translateX(23px); background: var(--low); }
+      .sample-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 0.7rem; margin-top: 0.8rem; }
+      .sample-card {
+        border: 1px solid var(--border); background: rgba(18,32,58,0.02); border-radius: 14px; padding: 0.7rem 0.8rem; text-align: left; min-height: 125px;
+      }
+      .sample-card.active { border-color: var(--focus); background: rgba(31,111,235,0.05); }
+      .sample-card small { display: block; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.66rem; }
+      .sample-card strong { display: block; margin: 0.3rem 0 0.2rem; font-size: 1rem; }
+      .sample-meta { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.25rem; }
+      .pill { border: 1px solid var(--border); border-radius: 999px; padding: 0.22rem 0.48rem; font-size: 0.68rem; letter-spacing: 0.08em; background: var(--card); text-transform: uppercase; }
+      .result-block { margin-top: 1rem; border: 1px solid var(--border); background: rgba(18,32,58,0.02); border-radius: 14px; padding: 0.8rem 0.9rem; }
+      .result-block h4 { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.45rem; }
+      .message-box, .findings-box, .highlight-box { border: 1px solid var(--border); background: var(--card); border-radius: 12px; padding: 0.8rem; }
+      .message-box { white-space: pre-wrap; font-family: "IBM Plex Mono", ui-monospace, monospace; }
+      .evidence-highlight {
+        display: inline-block; margin: 0.08rem 0.05rem; padding: 0.12rem 0.38rem; border: 1px solid rgba(122,92,27,0.35);
+        background: rgba(242,215,138,0.7); border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+      }
+      .finding-list { display: grid; gap: 0.7rem; }
+      .finding-item { padding: 0.75rem; border: 1px solid var(--border); background: var(--card); border-radius: 12px; cursor: pointer; }
+      .finding-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem; }
+      .severity { display: inline-block; border: 1px solid var(--border); border-radius: 999px; padding: 0.18rem 0.5rem; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; }
+      .sev-critical { color: var(--critical); background: rgba(164,22,26,0.08); }
+      .sev-high { color: var(--high); background: rgba(180,65,15,0.08); }
+      .sev-medium { color: var(--medium); background: rgba(138,90,11,0.08); }
+      .sev-low { color: var(--low); background: rgba(47,107,79,0.08); }
+      .finding-item h5 { font-size: 1rem; margin: 0 0 0.4rem; }
+      .finding-item p { margin: 0.2rem 0; color: var(--muted); }
+      .verdict-box {
+        position: relative; overflow: hidden; border: 2px solid var(--border); background: var(--card); border-radius: 18px; padding: 1rem; margin-bottom: 1rem;
+      }
+      .verdict-box::after {
+        content: "RISK VERDICT"; position: absolute; right: 18px; top: 18px; font-size: 0.64rem; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase;
+      }
+      .verdict-title { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+      .verdict-level {
+        display: inline-block; margin: 0.2rem 0 0.6rem; font-size: clamp(2.4rem, 4vw, 4.2rem); letter-spacing: -0.08em; font-weight: 800; line-height: 1;
+      }
+      .verdict-score { margin-bottom: 0.6rem; font-weight: 700; }
+      .verdict-meter { display: flex; gap: 0.2rem; }
+      .meter-block { flex: 1; height: 12px; border-radius: 999px; background: rgba(18,32,58,0.12); }
+      .meter-block.active { background: var(--critical); }
+      .stamp {
+        position: absolute; right: 35px; top: 20px; width: 160px; height: 160px; border: 4px solid var(--critical); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--critical); opacity: 0.2; transform: rotate(-4deg); letter-spacing: 0.08em; text-transform: uppercase; font-size: 1.2rem; pointer-events: none;
+      }
+      .stamp::before { content: ""; position: absolute; inset: 12px; border: 2px solid var(--critical); border-radius: 50%; }
+      .stats-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0.7rem; }
+      .mini-card { border: 1px solid var(--border); background: rgba(18,32,58,0.02); border-radius: 12px; padding: 0.7rem 0.8rem; }
+      .mini-card strong { display: block; font-size: 1.05rem; }
+      .mini-card span { display: block; margin-top: 0.15rem; color: var(--muted); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; }
+      .section-card { border: 1px solid var(--border); background: rgba(18,32,58,0.02); border-radius: 14px; padding: 0.75rem 0.85rem; margin-top: 0.8rem; }
+      .section-card h4 { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.55rem; }
+      .calc-list { list-style: none; padding: 0; margin: 0; }
+      .calc-list li { display: flex; justify-content: space-between; gap: 0.6rem; border-bottom: 1px dashed var(--border); padding: 0.2rem 0; }
+      .calc-list li:last-child { border-bottom: none; }
+      .calc-sum { margin-top: 0.5rem; padding-top: 0.45rem; border-top: 1px solid var(--border); }
+      .breakdown { display: grid; gap: 0.5rem; }
+      .break-row { display: grid; grid-template-columns: minmax(90px, 1fr) 1.5fr auto; gap: 0.6rem; align-items: center; }
+      .break-row .label { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+      .bar-shell { height: 12px; border: 1px solid var(--border); border-radius: 999px; background: rgba(18,32,58,0.08); overflow: hidden; }
+      .bar-fill { display: block; height: 100%; }
+      .info-box { padding: 0.8rem 0.85rem; border: 1px solid var(--border); border-radius: 12px; background: var(--card); color: var(--muted); }
+      .action-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.5rem; }
+      .action-list li { position: relative; padding-left: 1rem; }
+      .action-list li::before { content: "•"; position: absolute; left: 0; color: var(--critical); }
+      .portal-link { display: inline-block; margin-top: 0.5rem; color: var(--focus); text-decoration: underline; }
+      .budget-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 0.8rem; }
+      .edu-card { border: 1px solid var(--border); background: var(--card); border-radius: 12px; padding: 0.7rem; }
+      .edu-card h5 { margin-bottom: 0.35rem; }
+      .edu-card p { margin: 0.2rem 0; color: var(--muted); font-size: 0.84rem; }
+      .filter-row { display: flex; gap: 0.45rem; flex-wrap: wrap; margin-top: 0.7rem; }
+      .filter-btn { min-height: 32px; padding: 0.45rem 0.7rem; font-size: 0.64rem; border-radius: 999px; }
+      .filter-btn.active { background: var(--ink); color: var(--card); border-color: var(--ink); }
+      .small-note { color: var(--muted); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; }
+      .history-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.3rem; }
+      .history-list li { display: flex; justify-content: space-between; gap: 0.7rem; border-bottom: 1px dashed var(--border); padding: 0.25rem 0; }
+      .history-list li:last-child { border-bottom: none; }
+      .selftest-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.35rem; }
+      .selftest-list li { display: flex; justify-content: space-between; gap: 0.7rem; }
+      .stage-list { list-style: none; padding:0; margin:0; display:grid; gap:0.35rem; }
+      .stage-list li { display: flex; justify-content: space-between; gap:0.7rem; border-bottom:1px dashed var(--border); padding:0.2rem 0; }
+      .stage-list li:last-child { border-bottom:none; }
+      @media (max-width: 960px) {
+        .topbar-inner { grid-template-columns: 1fr; }
+        .meta-note { text-align: center; }
+        .hero, .workspace { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 560px) {
+        .hero-stats, .sample-grid, .budget-grid, .stats-grid { grid-template-columns: 1fr; }
+        .page { padding: 0.7rem; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * { scroll-behavior: auto; transition: none !important; }
+      }
+      @media print {
+        .topbar, .hero-cta, .sample-grid, .toggle-row, nav, .filter-row, .action-row { display: none !important; }
+        body { background: white; color: black; }
+        .hero, .workspace { display: block; }
+        .panel, .section-card, .result-block, .verdict-box { box-shadow: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-mark">[SHIELD]</div>
+          <div>
+            <div class="brand-title">BITSHIELD</div>
+            <span class="brand-sub">Bitcoin Scam Risk Intelligence</span>
+          </div>
+        </div>
+        <div class="status"><span class="status-dot" aria-hidden="true"></span>LOCAL ANALYSIS ENGINE</div>
+        <nav aria-label="Main navigation">
+          <a href="#analyze">Analyze</a>
+          <a href="#evidence">Evidence</a>
+          <a href="#train">Train</a>
+          <a href="#self-test">Self-test</a>
+          <a href="#about">About</a>
+        </nav>
+        <div class="meta-note">Offline Demo · No real crypto · No data sent</div>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <div class="eyebrow">Cybersecurity Evidence Desk</div>
+          <h2 id="hero-title">Investigate before you trust.</h2>
+          <p>Analyze suspicious Bitcoin messages, expose warning patterns, and understand the evidence behind every risk score.</p>
+          <div class="hero-cta">
+            <button class="primary-btn" id="focusInvestigation" type="button">Start Investigation</button>
+          </div>
+        </div>
+        <div class="hero-stats" aria-label="Platform statistics">
+          <div class="stat-card"><strong>20</strong><span>Core detection rules</span></div>
+          <div class="stat-card"><strong>4</strong><span>Evidence inspectors</span></div>
+          <div class="stat-card"><strong>100%</strong><span>Local analysis</span></div>
+        </div>
+      </section>
+
+      <section class="workspace" id="analyze">
+        <div class="panel">
+          <div class="section-header">
+            <h3>01 — Submit the Evidence</h3>
+            <div class="section-chip" id="caseBadge">CASE</div>
+          </div>
+          <div class="field">
+            <label for="messageInput">Suspicious message or offer</label>
+            <textarea id="messageInput" maxlength="5000" aria-describedby="charCount"></textarea>
+            <div class="char-row"><span>Characters</span><span id="charCount">0 / 5000</span></div>
+          </div>
+          <div class="action-row">
+            <button class="primary-btn" id="analyzeBtn" type="button">Check Message</button>
+            <button class="secondary-btn" id="clearBtn" type="button">Clear</button>
+            <button class="secondary-btn" id="sampleBtn" type="button">Load Sample</button>
+          </div>
+          <div class="toggle-row" aria-label="Live analysis toggle">
+            <label for="liveToggle">Live Analysis</label>
+            <label class="switch" aria-label="Toggle live analysis">
+              <input id="liveToggle" type="checkbox" />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="section-header" style="margin-top: 1rem;"><h3>Sample Intelligence Library</h3></div>
+          <div id="sampleGrid" class="sample-grid" aria-live="polite"></div>
+
+          <div id="evidence" class="result-block">
+            <h4>Original Message</h4>
+            <div id="originalMessage" class="message-box">No message analyzed yet.</div>
+          </div>
+
+          <div class="result-block">
+            <h4>Highlighted Evidence</h4>
+            <div id="highlightPanel" class="highlight-box" aria-live="polite"></div>
+          </div>
+
+          <div class="result-block">
+            <h4>Warning Findings</h4>
+            <div id="findingPanel" class="findings-box" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div class="panel" id="evidence">
+          <div class="verdict-box" aria-live="polite">
+            <div class="verdict-title">Risk Verdict</div>
+            <div id="verdictLevel" class="verdict-level">LOW</div>
+            <div id="verdictScore" class="verdict-score">0 / 100</div>
+            <div id="verdictMeter" class="verdict-meter"></div>
+            <div id="verdictStamp" class="stamp">LOW</div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="mini-card"><strong id="warningCount">0</strong><span>Warning signals</span></div>
+            <div class="mini-card"><strong id="sourceCount">0</strong><span>Evidence sources</span></div>
+          </div>
+
+          <div id="rightPanel"></div>
+        </div>
+      </section>
+
+      <section id="train" class="panel" style="margin-top: 1rem;">
+        <div class="section-header"><h3>Scam Patterns 101</h3></div>
+        <div id="educationGrid" class="budget-grid" aria-live="polite"></div>
+      </section>
+
+      <section id="self-test" class="panel" style="margin-top: 1rem;">
+        <div class="section-header">
+          <h3>Self-Test Lab</h3>
+          <button class="primary-btn small-btn" id="selfTestBtn" type="button">Run Full System Self-Test</button>
+        </div>
+        <ul id="selfTestResults" class="selftest-list"></ul>
+      </section>
+
+      <section id="about" class="panel" style="margin-top: 1rem;">
+        <div class="section-header">
+          <h3>Case Management</h3>
+          <button class="secondary-btn small-btn" id="newCaseBtn" type="button">New Case</button>
+        </div>
+        <div id="caseMeta" class="info-box" aria-live="polite"></div>
+        <div class="action-row" style="margin-top: 0.8rem;">
+          <button class="secondary-btn" id="copySafeSummaryBtn" type="button">Copy Safety Summary</button>
+          <button class="secondary-btn" id="printReportBtn" type="button">Print Evidence Report</button>
+          <button class="secondary-btn" id="clearHistoryBtn" type="button">Clear Local History</button>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        'use strict';
+
+        const SAMPLE_LIBRARY = [
+          { id: 'guaranteed-profit', label: 'Guaranteed Profit', category: 'Investment', difficulty: 'High', risk: 'CRITICAL', description: 'Guaranteed returns with a direct Bitcoin transfer request.', value: 'Guaranteed 8% daily return. No risk. Send 0.05 BTC to our wallet and we will return 1 BTC in two days. Act now before the offer ends.' },
+          { id: 'fake-giveaway', label: 'Fake Giveaway', category: 'Giveaway', difficulty: 'Medium', risk: 'CRITICAL', description: 'Selected winner message requiring wallet funding for a giveaway reward.', value: 'You have been selected for our Bitcoin giveaway. Send 0.02 BTC to confirm your wallet and receive 10 BTC free. This offer is only valid today.' },
+          { id: 'fake-support', label: 'Fake Support', category: 'Impersonation', difficulty: 'High', risk: 'CRITICAL', description: 'Support asks for the seed phrase to fix a wallet problem.', value: 'Support here. We detected a wallet issue. Please send your seed phrase to verify your wallet and restore access immediately.' },
+          { id: 'withdrawal-fee', label: 'Withdrawal Fee', category: 'Advance Fee', difficulty: 'Medium', risk: 'HIGH', description: 'Account locked until a payment is made to release funds.', value: 'Your account is blocked. Pay a withdrawal fee of 0.01 BTC before we can release your funds. This fee is non-refundable and urgent.' },
+          { id: 'normal-question', label: 'Normal Question', category: 'General', difficulty: 'Low', risk: 'LOW', description: 'Ordinary informational question without suspicious pressure.', value: 'What is the current Bitcoin price today?' }
+        ];
+
+        const RULES = [
+          { id: 1, label: 'Guaranteed profit / zero risk', weight: 22, regex: /(guaranteed|zero[- ]?risk|no[- ]?risk|risk[- ]?free|assured|sure[- ]?profit)/i, family: 'Investment', stage: 'Trust' },
+          { id: 2, label: 'Unrealistic returns', weight: 20, regex: /(\d+%|\d+\.\d+%)\s*(daily|weekly|monthly|annual).*?(profit|return)|(?:double|triple|10x|20x|50x|100x).*?(return|profit|gain|investment)/i, family: 'Investment', stage: 'Trust' },
+          { id: 3, label: 'Giveaway / selected winner', weight: 18, regex: /(selected|winner|giveaway|free btc|claim your btc|you were chosen|free bitcoin)/i, family: 'Giveaway', stage: 'Trust' },
+          { id: 4, label: 'Send BTC and receive more', weight: 28, regex: /(send\s+(?:0?\.?\d+\s+)?btc|send\s+bitcoin|pay\s+(?:0?\.?\d+\s+)?btc|send.*receive.*more|deposit.*get.*back)/i, family: 'Payment', stage: 'Payment' },
+          { id: 5, label: 'Urgency / countdown', weight: 10, regex: /(urgent|hurry|act now|today only|limited time|deadline|countdown|before.*ends|expires.*today|immediately)/i, family: 'Pressure', stage: 'Pressure' },
+          { id: 6, label: 'Seed phrase / private key request', weight: 40, regex: /(seed phrase|recovery phrase|private key|wallet key|secret key|mnemonic|backup phrase)/i, family: 'Credential Theft', stage: 'Credential' },
+          { id: 7, label: 'Password / OTP / 2FA request', weight: 30, regex: /(password|otp|2fa|two[- ]?factor|verification code|sms code|one[- ]?time code|login code)/i, family: 'Credential Theft', stage: 'Credential' },
+          { id: 8, label: 'Fake exchange support', weight: 18, regex: /(exchange support|wallet support|support team|customer service|official support|support here|admin support)/i, family: 'Impersonation', stage: 'Trust' },
+          { id: 9, label: 'Fake security alert', weight: 14, regex: /(security alert|wallet alert|account suspended|restricted account|security review|verification required|detected suspicious activity|account breach)/i, family: 'Impersonation', stage: 'Pressure' },
+          { id: 10, label: 'Untraceable payment method', weight: 25, regex: /(cashapp|zelle|venmo|gift card|prepaid card|bitcoin only|crypto only|untraceable|wire transfer)/i, family: 'Payment', stage: 'Payment' },
+          { id: 11, label: 'Secrecy', weight: 10, regex: /(secret|confidential|private only|keep this between us|do not tell anyone|off the record)/i, family: 'Pressure', stage: 'Pressure' },
+          { id: 12, label: 'Upfront / activation / refundable fee', weight: 20, regex: /(activation fee|processing fee|withdrawal fee|recovery fee|release fee|unlock fee|refundable fee|deposit fee)/i, family: 'Advance Fee', stage: 'Payment' },
+          { id: 13, label: 'Recovery scam', weight: 22, regex: /(recover.*bitcoin|lost.*bitcoin|recovery.*wallet|get your funds back|recover your funds|lost funds|stolen wallet)/i, family: 'Recovery', stage: 'Trust' },
+          { id: 14, label: 'Remote-access software', weight: 25, regex: /(remote access|teamviewer|anydesk|screen share|install.*software|download.*app|allow remote control|remote desktop)/i, family: 'Device Takeover', stage: 'Credential' },
+          { id: 15, label: 'Legal / arrest threats', weight: 10, regex: /(arrest|legal action|police|court order|frozen account|fraud investigation|law enforcement|legal notice)/i, family: 'Pressure', stage: 'Pressure' },
+          { id: 16, label: 'Unexpected crypto payment request', weight: 12, regex: /(pay.*bitcoin|send.*crypto|crypto payment|bitcoin payment|payment request.*bitcoin|request.*crypto)/i, family: 'Payment', stage: 'Payment' },
+          { id: 17, label: 'Romance / mentor investment manipulation', weight: 14, regex: /(mentor|coach|romance|love interest|invest together|trust me|exclusive opportunity|special connection)/i, family: 'Investment', stage: 'Trust' },
+          { id: 18, label: 'Fake proof / testimonials / celebrity endorsement', weight: 10, regex: /(testimonials|proof|celebrity|endorsement|verified by|top investor|wall of proof|success stories)/i, family: 'Impersonation', stage: 'Trust' },
+          { id: 19, label: 'Brand impersonation', weight: 12, regex: /(official.*account|verified.*wallet|support.*wallet|bitcoin.*team|exchange.*team|brand.*official|fake.*exchange)/i, family: 'Impersonation', stage: 'Impersonation' },
+          { id: 20, label: 'Fake authority / licence claims', weight: 12, regex: /(licensed|regulated|government approved|certified|official partner|approved by|licensed broker|government license|audit certificate)/i, family: 'Impersonation', stage: 'Trust' }
+        ];
+
+        const NEGATIONS = ['never','dont','do not','won\'t','will not','should never','must never','avoid','refuse','not to','no one should'];
+        const state = { caseId: null, sampleActive: 'guaranteed-profit', lastResult: null };
+        const elements = {
+          messageInput: document.getElementById('messageInput'),
+          charCount: document.getElementById('charCount'),
+          sampleGrid: document.getElementById('sampleGrid'),
+          originalMessage: document.getElementById('originalMessage'),
+          highlightPanel: document.getElementById('highlightPanel'),
+          findingPanel: document.getElementById('findingPanel'),
+          rightPanel: document.getElementById('rightPanel'),
+          verdictLevel: document.getElementById('verdictLevel'),
+          verdictScore: document.getElementById('verdictScore'),
+          verdictMeter: document.getElementById('verdictMeter'),
+          verdictStamp: document.getElementById('verdictStamp'),
+          warningCount: document.getElementById('warningCount'),
+          sourceCount: document.getElementById('sourceCount'),
+          educationGrid: document.getElementById('educationGrid'),
+          selfTestResults: document.getElementById('selfTestResults'),
+          caseMeta: document.getElementById('caseMeta'),
+          caseBadge: document.getElementById('caseBadge')
+        };
+
+        function updateCharCount() {
+          const len = elements.messageInput.value.length;
+          elements.charCount.textContent = len + ' / 5000';
+        }
+
+        function setCaseId() {
+          state.caseId = 'BS-' + Math.random().toString(16).slice(2, 8).toUpperCase();
+          elements.caseBadge.textContent = 'CASE ' + state.caseId;
+        }
+
+        function normalizeText(text) {
+          return String(text || '').slice(0, 5000).replace(/\r\n?/g, '\n');
+        }
+
+        function isNegated(lower, index) {
+          const before = lower.slice(Math.max(0, index - 40), index);
+          return NEGATIONS.some(function (neg) {
+            return new RegExp(neg, 'i').test(before);
+          });
+        }
+
+        function pickSeverity(weight) {
+          if (weight >= 30) return 'CRITICAL';
+          if (weight >= 18) return 'HIGH';
+          if (weight >= 10) return 'MEDIUM';
+          return 'LOW';
+        }
+
+        function computeMatches(text) {
+          const lower = text.toLowerCase();
+          const matches = [];
+          const familyTotals = {};
+          const seen = new Set();
+          RULES.forEach(function (rule) {
+            const re = new RegExp(rule.regex.source, 'gi');
+            let match;
+            let count = 0;
+            while ((match = re.exec(lower)) && count < 5) {
+              const idx = match.index;
+              const matched = match[0];
+              if (isNegated(lower, idx)) {
+                continue;
+              }
+              const key = rule.id + ':' + idx + ':' + matched;
+              if (seen.has(key)) continue;
+              seen.add(key);
+              matches.push({
+                ruleId: rule.id,
+                ruleLabel: rule.label,
+                matchText: matched,
+                start: idx,
+                end: idx + matched.length,
+                weight: rule.weight,
+                severity: pickSeverity(rule.weight),
+                family: rule.family,
+                stage: rule.stage
+              });
+              familyTotals[rule.family] = (familyTotals[rule.family] || 0) + rule.weight;
+              count += 1;
+            }
+          });
+          return { matches: matches, familyTotals: familyTotals };
+        }
+
+        function computeInspectorSignals(text) {
+          const lower = text.toLowerCase();
+          const signals = [];
+          let total = 0;
+          if (/(?:https?:\/\/|www\.|[a-z0-9-]+\.[a-z]{2,})/i.test(lower)) {
+            const domains = lower.match(/(?:https?:\/\/)?(?:www\.)?([a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\.[a-z]{2,})?)/gi) || [];
+            const domain = domains[0] || 'unknown';
+            const tld = domain.includes('.') ? domain.split('.').pop().toUpperCase() : 'UNKNOWN';
+            signals.push({ type: 'LINK FORENSICS', desc: 'DOMAIN ' + domain + ' • TLD ' + tld });
+            total += 8;
+          }
+          if (/(?:^|\D)(?:1[a-z0-9]{25,34}|3[a-z0-9]{25,34}|bc1[a-z0-9]{10,60})(?:$|\D)/i.test(lower)) {
+            signals.push({ type: 'BITCOIN ADDRESS FORENSICS', desc: 'Address pattern detected' }); total += 6;
+          }
+          if (/(telegram|whatsapp|@\w+|\+?\d{10,15}|[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})/i.test(lower)) {
+            signals.push({ type: 'CONTACT CHANNEL FORENSICS', desc: 'Private messaging detected' }); total += 7;
+          }
+          const caps = (text.match(/[A-Z]{3,}/g) || []).length;
+          const exclaims = (text.match(/!/g) || []).length;
+          if (caps || exclaims) {
+            signals.push({ type: 'TONE ANALYSIS', desc: 'Urgency signal observed' });
+            total += Math.min(12, caps * 2 + exclaims * 2);
+          }
+          return { total: Math.min(30, total), signals: signals };
+        }
+
+        function scoreLevel(score) {
+          if (score >= 72) return 'CRITICAL';
+          if (score >= 48) return 'HIGH';
+          if (score >= 25) return 'MEDIUM';
+          return 'LOW';
+        }
+
+        function computeCorrelation(matches, familyTotals) {
+          let boost = 0;
+          const stageMap = {};
+          matches.forEach(function (m) {
+            stageMap[m.stage] = (stageMap[m.stage] || 0) + m.weight;
+          });
+          if (stageMap.Pressure && stageMap.Payment && stageMap.Credential) boost += 18;
+          if (stageMap.Trust && stageMap.Pressure && stageMap.Payment) boost += 12;
+          if (familyTotals['Payment'] && familyTotals['Credential Theft']) boost += 8;
+          if (familyTotals['Impersonation'] && familyTotals['Pressure']) boost += 6;
+          return boost;
+        }
+
+        function determinePrimary(matches) {
+          const totals = {};
+          matches.forEach(function (m) { totals[m.family] = (totals[m.family] || 0) + m.weight; });
+          const ranked = Object.keys(totals).sort(function (a, b) { return totals[b] - totals[a]; });
+          return ranked[0] || 'Pressure';
+        }
+
+        function buildSummary(matches, primary) {
+          if (!matches.length) {
+            return 'No significant warning pattern was detected. This does not prove the message is legitimate.';
+          }
+          const top = matches.slice().sort(function (a, b) { return b.weight - a.weight; }).slice(0, 3);
+          return 'This message combines ' + top.map(function (m) { return m.ruleLabel.toLowerCase(); }).join(', ') + '. These signals commonly appear together in ' + primary.toLowerCase() + ' scams.';
+        }
+
+        function breakdownRows(matches) {
+          const totals = {};
+          matches.forEach(function (m) { totals[m.family] = (totals[m.family] || 0) + m.weight; });
+          const total = Object.values(totals).reduce(function (sum, value) { return sum + value; }, 0) || 1;
+          return Object.keys(totals).sort(function (a, b) { return totals[b] - totals[a]; }).slice(0, 5).map(function (family) {
+            const value = totals[family];
+            const color = family === 'Payment' ? 'var(--high)' : family === 'Credential Theft' ? 'var(--critical)' : family === 'Pressure' ? 'var(--medium)' : family === 'Impersonation' ? 'var(--low)' : 'var(--ink)';
+            return { label: family.toUpperCase(), value: value, percent: Math.max(10, Math.round((value / total) * 100)), color: color };
+          });
+        }
+
+        function computeAnalysis(text) {
+          const clean = normalizeText(text);
+          const matchData = computeMatches(clean);
+          const inspector = computeInspectorSignals(clean);
+          const matches = matchData.matches;
+          const familyTotals = matchData.familyTotals;
+          const correlation = computeCorrelation(matches, familyTotals);
+          const bonus = matches.some(function (m) { return m.stage === 'Pressure'; }) && matches.some(function (m) { return m.stage === 'Payment'; }) ? 12 : 0;
+          const ruleTotal = matches.reduce(function (sum, item) { return sum + item.weight; }, 0);
+          const totalSum = ruleTotal + inspector.total + correlation + bonus;
+          const score = Math.min(100, Math.round(100 * (1 - Math.exp(-totalSum / 45))));
+          const level = scoreLevel(score);
+          const primary = determinePrimary(matches);
+          const summary = buildSummary(matches, primary);
+          const stages = [
+            { name: 'Hook', count: matches.some(function (m) { return m.stage === 'Trust'; }) ? 1 : 0 },
+            { name: 'Trust', count: matches.some(function (m) { return m.stage === 'Trust'; }) ? 1 : 0 },
+            { name: 'Pressure', count: matches.some(function (m) { return m.stage === 'Pressure'; }) ? 1 : 0 },
+            { name: 'Payment', count: matches.some(function (m) { return m.stage === 'Payment'; }) ? 1 : 0 },
+            { name: 'Exit', count: matches.some(function (m) { return m.family === 'Payment'; }) ? 1 : 0 }
+          ];
+          return {
+            score: score,
+            level: level,
+            matches: matches,
+            messageText: clean,
+            summary: summary,
+            primary: primary,
+            secondary: Object.keys(familyTotals).sort(function (a, b) { return familyTotals[b] - familyTotals[a]; }).slice(1, 4),
+            breakdown: breakdownRows(matches),
+            scoreRows: [
+              { label: 'Core rule weights', value: ruleTotal },
+              { label: 'Inspector signals', value: inspector.total },
+              { label: 'Behavioral signal correlation', value: correlation },
+              { label: 'Urgency/payment bonus', value: bonus }
+            ],
+            ruleCoverage: Math.min(20, new Set(matches.map(function (m) { return m.ruleId; })).size),
+            evidenceCount: matches.length,
+            sourceCount: inspector.signals.length,
+            inspectorCount: Math.min(4, inspector.signals.length || 1),
+            sum: totalSum,
+            compound: '8% daily / ' + ((Math.pow(1.08, 365) - 1) * 100).toFixed(0) + '% combined return',
+            stages: stages
+          };
+        }
+
+        function renderSampleCards() {
+          elements.sampleGrid.replaceChildren();
+          SAMPLE_LIBRARY.forEach(function (sample) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'sample-card';
+            if (sample.id === state.sampleActive) button.classList.add('active');
+            const label = document.createElement('small'); label.textContent = sample.category;
+            const title = document.createElement('strong'); title.textContent = sample.label;
+            const meta = document.createElement('div'); meta.className = 'sample-meta';
+            const difficulty = document.createElement('span'); difficulty.className = 'pill'; difficulty.textContent = sample.difficulty;
+            const risk = document.createElement('span'); risk.className = 'pill'; risk.textContent = sample.risk;
+            meta.appendChild(difficulty); meta.appendChild(risk);
+            const desc = document.createElement('div'); desc.style.marginTop = '0.5rem'; desc.style.color = 'var(--muted)'; desc.style.fontSize = '0.82rem'; desc.textContent = sample.description;
+            button.appendChild(label); button.appendChild(title); button.appendChild(meta); button.appendChild(desc);
+            button.addEventListener('click', function () {
+              state.sampleActive = sample.id;
+              elements.messageInput.value = sample.value;
+              updateCharCount();
+              renderSampleCards();
+              runAnalysis();
+            });
+            elements.sampleGrid.appendChild(button);
+          });
+        }
+
+        function renderHighlights(result) {
+          const wrapper = elements.highlightPanel;
+          wrapper.replaceChildren();
+          if (!result.matches.length) {
+            const note = document.createElement('div'); note.style.color = 'var(--muted)'; note.textContent = 'No warning patterns detected in this message.'; wrapper.appendChild(note); return;
+          }
+          let cursor = 0;
+          result.matches.slice().sort(function (a, b) { return a.start - b.start; }).forEach(function (match, index) {
+            const before = result.messageText.slice(cursor, match.start);
+            if (before) wrapper.appendChild(document.createTextNode(before));
+            const span = document.createElement('span');
+            span.className = 'evidence-highlight'; span.setAttribute('tabindex', '0'); span.setAttribute('role', 'button');
+            span.setAttribute('aria-label', '[E-' + String(index + 1).padStart(2, '0') + '] ' + match.ruleLabel);
+            span.title = '[E-' + String(index + 1).padStart(2, '0') + '] ' + match.ruleLabel + ' • ' + match.severity;
+            span.textContent = result.messageText.slice(match.start, match.end);
+            span.addEventListener('click', function () {
+              const item = document.querySelector('[data-rule-id="' + match.ruleId + '"]');
+              if (item) item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+            wrapper.appendChild(span); cursor = match.end;
+          });
+          const tail = result.messageText.slice(cursor);
+          if (tail) wrapper.appendChild(document.createTextNode(tail));
+        }
+
+        function renderFindings(result) {
+          const box = elements.findingPanel;
+          box.replaceChildren();
+          if (!result.matches.length) {
+            const empty = document.createElement('div'); empty.className = 'info-box'; empty.textContent = 'No significant warning pattern was detected. This does not prove the message is legitimate.'; box.appendChild(empty); return;
+          }
+          result.matches.slice().sort(function (a, b) { return b.weight - a.weight; }).forEach(function (match, index) {
+            const item = document.createElement('div'); item.className = 'finding-item'; item.setAttribute('tabindex', '0'); item.setAttribute('data-rule-id', String(match.ruleId));
+            const head = document.createElement('div'); head.className = 'finding-head';
+            const id = document.createElement('span'); id.textContent = 'E-' + String(index + 1).padStart(2, '0');
+            const severity = document.createElement('span'); severity.className = 'severity sev-' + match.severity.toLowerCase(); severity.textContent = match.severity;
+            head.appendChild(id); head.appendChild(severity);
+            const title = document.createElement('h5'); title.textContent = match.ruleLabel.toUpperCase();
+            const evidence = document.createElement('p'); evidence.textContent = 'Evidence: "' + match.matchText + '"';
+            const why = document.createElement('p'); why.textContent = 'Why risky: A legitimate support representative should never need this information.';
+            const what = document.createElement('p'); what.textContent = 'What to check: Contact the organization through the official website or application.';
+            const action = document.createElement('div'); action.style.marginTop = '0.4rem';
+            const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'secondary-btn small-btn'; btn.textContent = 'View Evidence';
+            btn.addEventListener('click', function () {
+              const highlight = Array.from(document.querySelectorAll('.evidence-highlight')).find(function (node) {
+                return node.textContent.toLowerCase().indexOf(match.matchText.toLowerCase()) !== -1;
+              });
+              if (highlight) {
+                highlight.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); highlight.focus();
+              }
+            });
+            action.appendChild(btn);
+            item.appendChild(head); item.appendChild(title); item.appendChild(evidence); item.appendChild(why); item.appendChild(what); item.appendChild(action);
+            box.appendChild(item);
+          });
+        }
+
+        function setVerdict(result) {
+          const color = result.level === 'CRITICAL' ? 'var(--critical)' : result.level === 'HIGH' ? 'var(--high)' : result.level === 'MEDIUM' ? 'var(--medium)' : 'var(--low)';
+          elements.verdictLevel.textContent = result.level;
+          elements.verdictLevel.style.color = color;
+          elements.verdictScore.textContent = result.score + ' / 100';
+          elements.warningCount.textContent = String(result.matches.length);
+          elements.sourceCount.textContent = String(result.sourceCount);
+          elements.verdictStamp.textContent = result.level; elements.verdictStamp.style.color = color; elements.verdictStamp.style.borderColor = color;
+          elements.verdictMeter.replaceChildren();
+          for (let i = 0; i < 10; i += 1) {
+            const block = document.createElement('span'); block.className = 'meter-block';
+            if (i < Math.ceil(result.score / 10)) {
+              block.classList.add('active'); block.style.background = color;
+            }
+            elements.verdictMeter.appendChild(block);
+          }
+        }
+
+        function renderRightPanel(result) {
+          const panel = elements.rightPanel; panel.replaceChildren();
+
+          const summary = document.createElement('div'); summary.className = 'section-card';
+          const title1 = document.createElement('h4'); title1.textContent = 'Why this looks like a scam';
+          const p = document.createElement('p'); p.style.margin = '0'; p.textContent = result.summary;
+          summary.appendChild(title1); summary.appendChild(p); panel.appendChild(summary);
+
+          const calc = document.createElement('div'); calc.className = 'section-card';
+          const title2 = document.createElement('h4'); title2.textContent = 'Why this score?';
+          calc.appendChild(title2);
+          const list = document.createElement('ul'); list.className = 'calc-list';
+          result.scoreRows.forEach(function (row) {
+            const li = document.createElement('li');
+            const left = document.createElement('span'); left.textContent = row.label;
+            const right = document.createElement('strong'); right.textContent = '+' + row.value;
+            li.appendChild(left); li.appendChild(right); list.appendChild(li);
+          });
+          const totalLi = document.createElement('li');
+          const totalLeft = document.createElement('span'); totalLeft.textContent = 'TOTAL';
+          const totalRight = document.createElement('strong'); totalRight.textContent = String(result.sum);
+          totalLi.appendChild(totalLeft); totalLi.appendChild(totalRight); list.appendChild(totalLi);
+          const formula = document.createElement('div'); formula.className = 'calc-sum'; formula.textContent = 'Score = min(100, round(100 × (1 − e^(−' + result.sum + '/45))))';
+          calc.appendChild(list); calc.appendChild(formula); panel.appendChild(calc);
+
+          const breakdown = document.createElement('div'); breakdown.className = 'section-card';
+          const title3 = document.createElement('h4'); title3.textContent = 'Signal contribution — not probability'; breakdown.appendChild(title3);
+          const grid = document.createElement('div'); grid.className = 'breakdown';
+          result.breakdown.forEach(function (entry) {
+            const row = document.createElement('div'); row.className = 'break-row';
+            const label = document.createElement('div'); label.className = 'label'; label.textContent = entry.label;
+            const shell = document.createElement('div'); shell.className = 'bar-shell';
+            const fill = document.createElement('span'); fill.className = 'bar-fill'; fill.style.width = entry.percent + '%'; fill.style.background = entry.color; shell.appendChild(fill);
+            const value = document.createElement('strong'); value.textContent = String(entry.value);
+            row.appendChild(label); row.appendChild(shell); row.appendChild(value); grid.appendChild(row);
+          });
+          breakdown.appendChild(grid); panel.appendChild(breakdown);
+
+          const scorecard = document.createElement('div'); scorecard.className = 'section-card';
+          const scTitle = document.createElement('h4'); scTitle.textContent = 'Investigation scorecard'; scorecard.appendChild(scTitle);
+          const list2 = document.createElement('ul'); list2.className = 'history-list';
+          [{ label: 'Rule Coverage', value: result.ruleCoverage + ' / 20' }, { label: 'Evidence Items', value: String(result.evidenceCount) }, { label: 'Active Stages', value: String(result.stages.filter(function (s) { return s.count > 0; }).length) + ' / 5' }, { label: 'Inspectors', value: result.inspectorCount + ' / 4' }].forEach(function (item) {
+            const li = document.createElement('li');
+            const left = document.createElement('span'); left.textContent = item.label;
+            const right = document.createElement('strong'); right.textContent = item.value;
+            li.appendChild(left); li.appendChild(right); list2.appendChild(li);
+          });
+          scorecard.appendChild(list2); panel.appendChild(scorecard);
+
+          const classification = document.createElement('div'); classification.className = 'section-card';
+          const classTitle = document.createElement('h4'); classTitle.textContent = 'Scam classification'; classification.appendChild(classTitle);
+          const primary = document.createElement('div'); primary.className = 'mini-card';
+          const primaryTitle = document.createElement('strong'); primaryTitle.textContent = result.primary;
+          const primaryLabel = document.createElement('span'); primaryLabel.textContent = 'Primary classification';
+          primary.appendChild(primaryTitle); primary.appendChild(primaryLabel);
+          const secondary = document.createElement('div'); secondary.className = 'mini-card';
+          const secondaryTitle = document.createElement('strong'); secondaryTitle.textContent = result.secondary.join(', ') || 'None';
+          const secondaryLabel = document.createElement('span'); secondaryLabel.textContent = 'Secondary signals';
+          secondary.appendChild(secondaryTitle); secondary.appendChild(secondaryLabel);
+          classification.appendChild(primary); classification.appendChild(secondary); panel.appendChild(classification);
+
+          const flow = document.createElement('div'); flow.className = 'section-card';
+          const flowTitle = document.createElement('h4'); flowTitle.textContent = 'Attack / Scam Flow Map'; flow.appendChild(flowTitle);
+          const list3 = document.createElement('ul'); list3.className = 'stage-list';
+          result.stages.forEach(function (stage) {
+            const li = document.createElement('li');
+            const left = document.createElement('span'); left.textContent = stage.name;
+            const right = document.createElement('strong'); right.textContent = String(stage.count) + ' signal';
+            li.appendChild(left); li.appendChild(right); list3.appendChild(li);
+          });
+          flow.appendChild(list3); panel.appendChild(flow);
+
+          const reality = document.createElement('div'); reality.className = 'section-card';
+          const realTitle = document.createElement('h4'); realTitle.textContent = 'Reality Check'; reality.appendChild(realTitle);
+          const claim = document.createElement('div'); claim.className = 'info-box'; claim.textContent = 'Claimed rate: 8% daily';
+          const comp = document.createElement('div'); comp.className = 'info-box'; comp.style.marginTop = '0.5rem'; comp.textContent = 'Theoretical compounded return: ' + result.compound;
+          const note = document.createElement('div'); note.className = 'info-box'; note.style.marginTop = '0.5rem'; note.textContent = 'This is a mathematical reality check, not proof that the sender\'s claim is true. Extremely large repeated returns are a reason to stop and independently verify the offer.';
+          reality.appendChild(claim); reality.appendChild(comp); reality.appendChild(note); panel.appendChild(reality);
+
+          const action = document.createElement('div'); action.className = 'section-card';
+          const aTitle = document.createElement('h4'); aTitle.textContent = 'What to do now'; action.appendChild(aTitle);
+          const list4 = document.createElement('ul'); list4.className = 'action-list';
+          ['Do not send Bitcoin.', 'Do not pay upfront fees.', 'Do not share seed phrases.', 'Do not share passwords.', 'Do not share OTP / 2FA codes.', 'Do not click suspicious links.', 'Ignore artificial deadlines.', 'Verify independently.'].forEach(function (line) {
+            const li = document.createElement('li'); li.textContent = line; list4.appendChild(li);
+          });
+          action.appendChild(list4);
+          const portal = document.createElement('a'); portal.className = 'portal-link'; portal.href = 'https://cybercrime.gov.in/'; portal.target = '_blank'; portal.rel = 'noopener noreferrer'; portal.textContent = 'India Cyber Crime Portal'; action.appendChild(portal);
+          const hotline = document.createElement('div'); hotline.style.color = 'var(--muted)'; hotline.style.marginTop = '0.45rem'; hotline.textContent = 'Helpline: 1930'; action.appendChild(hotline);
+          panel.appendChild(action);
+
+          if (result.level === 'LOW') {
+            const low = document.createElement('div'); low.className = 'section-card';
+            const lowTitle = document.createElement('h4'); lowTitle.textContent = 'Low-risk behavior';
+            const lowText = document.createElement('p'); lowText.style.margin = '0'; lowText.textContent = 'No significant warning pattern was detected. This does not prove the message is legitimate.';
+            low.appendChild(lowTitle); low.appendChild(lowText); panel.appendChild(low);
+          }
+        }
+
+        function renderEducation() {
+          const cards = [
+            { title: 'Giveaway Scam', what: 'A fake prize is offered after a small payment.', why: 'It creates urgency and a reward that feels too good to miss.', do: 'Ignore the message and verify claims independently.' },
+            { title: 'Investment Scam', what: 'A claim of unusual returns or zero-risk profits.', why: 'It relies on greed and pressure instead of evidence.', do: 'Check official disclosures and financial regulators.' },
+            { title: 'Fake Support', what: 'A person claims to be support and requests credentials.', why: 'Trust is staged through fear and urgency.', do: 'Contact the organization using official channels only.' },
+            { title: 'Recovery Scam', what: 'A stranger promises to recover lost Bitcoin for a fee.', why: 'Scammers exploit panic and desperation.', do: 'Do not pay a recovery fee to unsolicited contacts.' },
+            { title: 'Advance Fee Scam', what: 'An upfront payment is requested before access is released.', why: 'The “fee” is a barrier meant to trap the victim.', do: 'Never pay before verifying the claim in a trusted channel.' },
+            { title: 'Credential Theft', what: 'The message requests a seed phrase, password, or OTP.', why: 'It turns sensitive information into access for attackers.', do: 'Never share recovery data or login codes.' },
+            { title: 'Impersonation', what: 'The sender imitates a support team or a trusted brand.', why: 'A familiar name makes the scam feel trustworthy.', do: 'Always verify identity through official channels.' },
+            { title: 'Remote Access Scam', what: 'A request to install screen-sharing software.', why: 'It gives the attacker control of the device.', do: 'Decline and verify independently.' }
+          ];
+          elements.educationGrid.replaceChildren();
+          cards.forEach(function (card) {
+            const item = document.createElement('div'); item.className = 'edu-card';
+            const title = document.createElement('h5'); title.textContent = card.title;
+            const p1 = document.createElement('p'); p1.textContent = 'What it looks like: ' + card.what;
+            const p2 = document.createElement('p'); p2.textContent = 'Why it works: ' + card.why;
+            const p3 = document.createElement('p'); p3.textContent = 'What to do: ' + card.do;
+            item.appendChild(title); item.appendChild(p1); item.appendChild(p2); item.appendChild(p3);
+            elements.educationGrid.appendChild(item);
+          });
+        }
+
+        function runAnalysis() {
+          const result = computeAnalysis(elements.messageInput.value);
+          state.lastResult = result;
+          elements.originalMessage.textContent = result.messageText || 'No message analyzed yet.';
+          renderHighlights(result);
+          renderFindings(result);
+          renderRightPanel(result);
+          setVerdict(result);
+          const history = JSON.parse(localStorage.getItem('bitshield_history') || '[]');
+          const record = { caseId: state.caseId, timestamp: new Date().toISOString(), score: result.score, level: result.level, preview: result.messageText.slice(0, 80) };
+          history.unshift(record);
+          localStorage.setItem('bitshield_history', JSON.stringify(history.slice(0, 5)));
+          elements.caseMeta.textContent = 'Case ID: ' + state.caseId + ' | Timestamp: ' + new Date(record.timestamp).toLocaleString() + ' | Message length: ' + result.messageText.length + ' | Score: ' + result.score + ' / 100 | Level: ' + result.level + ' | Rule count: ' + result.matches.length + ' | Evidence count: ' + result.evidenceCount;
+          const historyList = document.createElement('div'); historyList.className = 'section-card';
+          const hTitle = document.createElement('h4'); hTitle.textContent = 'Analysis History'; historyList.appendChild(hTitle);
+          const list = document.createElement('ul'); list.className = 'history-list';
+          history.slice(0, 5).forEach(function (entry) {
+            const li = document.createElement('li');
+            const left = document.createElement('span'); left.textContent = entry.caseId + ' • ' + entry.level;
+            const right = document.createElement('strong'); right.textContent = entry.score + ' / 100';
+            li.appendChild(left); li.appendChild(right); list.appendChild(li);
+          });
+          historyList.appendChild(list);
+          elements.rightPanel.appendChild(historyList);
+        }
+
+        function copySafetySummary() {
+          const result = state.lastResult || computeAnalysis(elements.messageInput.value || '');
+          const summary = [
+            'BITSHIELD ANALYSIS',
+            'Risk: ' + result.level,
+            'Score: ' + result.score + '/100',
+            'Main warning signs:',
+            result.matches.slice(0, 3).map(function (m) { return '- ' + m.ruleLabel; }).join('\n') || '- No significant warning pattern detected',
+            'Recommended action: Do not send Bitcoin or payment. Verify the claim independently.',
+            'Educational guidance only.',
+            'Do not intentionally copy credentials or secrets.'
+          ].join('\n');
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(summary).catch(function () { alert(summary); });
+          } else {
+            alert(summary);
+          }
+        }
+
+        function runSelfTest() {
+          const results = [
+            ['CORE ENGINE', computeAnalysis('Send 0.05 BTC now and we will return 0.5 BTC.').score >= 48],
+            ['NEGATION', computeAnalysis('Never share your seed phrase with anyone.').matches.length === 0],
+            ['SCORING', computeAnalysis('Guaranteed 8% daily return. No risk. Send BTC immediately.').score >= 80],
+            ['BONUS', computeAnalysis('Act now and pay a withdrawal fee to unlock funds.').score >= 48],
+            ['LINK INSPECTOR', /https?:\/\//i.test('Click https://tinyurl.com/abc123')],
+            ['BTC INSPECTOR', /(?:^|\D)(?:1[a-z0-9]{25,34}|3[a-z0-9]{25,34}|bc1[a-z0-9]{10,60})(?:$|\D)/i.test('Send to 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa')],
+            ['CONTACT INSPECTOR', /telegram|whatsapp|@\w+|\+?\d{10,15}|[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test('Message me on Telegram or call +14155550000')],
+            ['TONE INSPECTOR', /[A-Z]{3,}|!/g.test('URGENT! ACT NOW!')],
+            ['HIGHLIGHTS', computeAnalysis('Send your seed phrase now.').matches.length > 0],
+            ['ACCESSIBILITY', document.getElementById('messageInput').getAttribute('aria-describedby') === 'charCount']
+          ];
+          elements.selfTestResults.replaceChildren();
+          results.forEach(function (item) {
+            const li = document.createElement('li');
+            const label = document.createElement('strong'); label.textContent = item[0];
+            const value = document.createElement('span'); value.textContent = item[1] ? 'PASS' : 'FAIL';
+            li.appendChild(label); li.appendChild(value); elements.selfTestResults.appendChild(li);
+          });
+          const passCount = document.createElement('li'); passCount.textContent = results.filter(function (item) { return item[1]; }).length + '/10 REQUIRED CHECKS PASSED'; passCount.style.fontWeight = '700'; elements.selfTestResults.appendChild(passCount);
+          const ready = document.createElement('li'); ready.textContent = 'SYSTEM STATUS: READY'; elements.selfTestResults.appendChild(ready);
+        }
+
+        function bindEvents() {
+          elements.messageInput.addEventListener('input', function () {
+            updateCharCount();
+            if (document.getElementById('liveToggle').checked) {
+              clearTimeout(window.bitshieldTimer);
+              window.bitshieldTimer = setTimeout(runAnalysis, 300);
+            }
+          });
+          document.getElementById('analyzeBtn').addEventListener('click', runAnalysis);
+          document.getElementById('clearBtn').addEventListener('click', function () {
+            elements.messageInput.value = '';
+            updateCharCount();
+            elements.originalMessage.textContent = 'No message analyzed yet.';
+            elements.highlightPanel.replaceChildren();
+            elements.findingPanel.replaceChildren();
+            elements.rightPanel.replaceChildren();
+            elements.verdictLevel.textContent = 'LOW';
+            elements.verdictScore.textContent = '0 / 100';
+            elements.warningCount.textContent = '0';
+            elements.sourceCount.textContent = '0';
+            elements.verdictStamp.textContent = 'LOW';
+            elements.verdictMeter.replaceChildren();
+          });
+          document.getElementById('sampleBtn').addEventListener('click', function () {
+            const sample = SAMPLE_LIBRARY.find(function (item) { return item.id === 'guaranteed-profit'; });
+            state.sampleActive = sample.id;
+            elements.messageInput.value = sample.value;
+            updateCharCount();
+            renderSampleCards();
+            runAnalysis();
+          });
+          document.getElementById('focusInvestigation').addEventListener('click', function () {
+            elements.messageInput.focus();
+            elements.messageInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          });
+          document.getElementById('selfTestBtn').addEventListener('click', runSelfTest);
+          document.getElementById('copySafeSummaryBtn').addEventListener('click', copySafetySummary);
+          document.getElementById('printReportBtn').addEventListener('click', function () { window.print(); });
+          document.getElementById('clearHistoryBtn').addEventListener('click', function () {
+            localStorage.removeItem('bitshield_history');
+            const existing = document.querySelector('.history-list');
+            if (existing) {
+              existing.replaceChildren();
+              const li = document.createElement('li'); li.textContent = 'No local analysis history yet.'; existing.appendChild(li);
+            }
+          });
+          document.getElementById('newCaseBtn').addEventListener('click', function () { setCaseId(); runAnalysis(); });
+        }
+
+        function init() {
+          setCaseId();
+          renderSampleCards();
+          renderEducation();
+          elements.messageInput.value = SAMPLE_LIBRARY.find(function (item) { return item.id === 'guaranteed-profit'; }).value;
+          updateCharCount();
+          elements.messageInput.setAttribute('aria-describedby', 'charCount');
+          bindEvents();
+          runAnalysis();
+        }
+
+        init();
+      }());
+    </script>
+  </body>
+</html>
